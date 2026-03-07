@@ -1,11 +1,21 @@
+// src/components/layout/DashboardLayout.jsx
 import { Menu } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const DashboardLayout = ({ children, navItems }) => {
+const DashboardLayout = ({ children, navItems, title }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentTitle, setCurrentTitle] = useState(title);
+
+  // Update title based on current route
+  useEffect(() => {
+    const activeItem = navItems.find((item) => item.href === location.pathname);
+    if (activeItem) {
+      setCurrentTitle(activeItem.label);
+    }
+  }, [location, navItems]);
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -27,13 +37,12 @@ const DashboardLayout = ({ children, navItems }) => {
           <div className="h-7 w-7 rounded-lg bg-blue-600 flex items-center justify-center">
             <span className="text-white font-bold text-xs">TX</span>
           </div>
-
           <span className="font-bold text-blue-600 dark:text-blue-400 text-sm">
             TalentBoardX
           </span>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation Items */}
         <nav className="p-4 space-y-1">
           {navItems.map((item) => {
             const active = location.pathname === item.href;
@@ -53,9 +62,28 @@ const DashboardLayout = ({ children, navItems }) => {
             );
           })}
         </nav>
+
+        {/* User Info at bottom */}
+        <div className="absolute bottom-4 left-4 right-4">
+          <div className="border-t dark:border-gray-700 pt-4">
+            <div className="flex items-center gap-3 px-3 py-2">
+              <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs font-medium">U</span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-800 dark:text-white">
+                  User Name
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  user@example.com
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </aside>
 
-      {/* Overlay Mobile */}
+      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/50 lg:hidden"
@@ -65,15 +93,23 @@ const DashboardLayout = ({ children, navItems }) => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Menu Button */}
-        <div className="lg:hidden p-3">
-          <button
-            className="text-gray-900 dark:text-white p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-            onClick={() => setSidebarOpen(true)}>
-            <Menu size={22} />
-          </button>
-        </div>
+        {/* Header */}
+        <header className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 sticky top-0 z-30">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-3">
+              <button
+                className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                onClick={() => setSidebarOpen(true)}>
+                <Menu size={22} className="text-gray-600 dark:text-gray-400" />
+              </button>
+              <h1 className="text-lg font-semibold text-gray-800 dark:text-white">
+                {currentTitle}
+              </h1>
+            </div>
+          </div>
+        </header>
 
+        {/* Page Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-auto">{children}</main>
       </div>
     </div>
