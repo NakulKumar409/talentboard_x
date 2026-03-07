@@ -12,6 +12,11 @@ import EmployerDashboard from "./pages/EmployerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
+// New Employer Dashboard Pages
+import EmployerJobs from "./pages/dashboard/employer/EmployerJobs";
+import EmployerApplicants from "./pages/dashboard/employer/EmployerApplicants";
+import EmployerPostJob from "./pages/dashboard/employer/EmployerPostJob";
+
 function App() {
   return (
     <Router>
@@ -30,6 +35,17 @@ function App() {
             <Route path="/dashboard/seeker" element={<SeekerDashboard />} />
             <Route path="/dashboard/employer" element={<EmployerDashboard />} />
             <Route path="/dashboard/admin" element={<AdminDashboard />} />
+
+            {/* New Employer Dashboard Sub-routes */}
+            <Route path="/dashboard/employer/jobs" element={<EmployerJobs />} />
+            <Route
+              path="/dashboard/employer/applicants"
+              element={<EmployerApplicants />}
+            />
+            <Route
+              path="/dashboard/employer/post"
+              element={<EmployerPostJob />}
+            />
 
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
