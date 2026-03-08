@@ -1,20 +1,24 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/layout/Navbar";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Footer from "./components/layout/Footer";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Jobs from "./pages/Jobs";
-import ApplyJob from "./pages/ApplyJob";
-import SeekerDashboard from "./pages/SeekerDashboard";
-import EmployerDashboard from "./pages/EmployerDashboard";
+import Navbar from "./components/layout/Navbar";
 import AdminDashboard from "./pages/AdminDashboard";
+import ApplyJob from "./pages/ApplyJob";
+import EmployerDashboard from "./pages/EmployerDashboard";
+import Index from "./pages/Index";
+import Jobs from "./pages/Jobs";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import SeekerDashboard from "./pages/SeekerDashboard";
+import Signup from "./pages/Signup";
+
+import SeekerApplications from "./pages/dashboard/seeker/SeekerApplications";
+import SeekerProfile from "./pages/dashboard/seeker/SeekerProfile";
+import SeekerSavedJobs from "./pages/dashboard/seeker/SeekerSavedJobs";
 
 // New Employer Dashboard Pages
-import EmployerJobs from "./pages/dashboard/employer/EmployerJobs";
 import EmployerApplicants from "./pages/dashboard/employer/EmployerApplicants";
+import EmployerJobs from "./pages/dashboard/employer/EmployerJobs";
 import EmployerPostJob from "./pages/dashboard/employer/EmployerPostJob";
 
 function App() {
@@ -30,6 +34,18 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/apply/:jobId" element={<ApplyJob />} />
+            <Route
+              path="/dashboard/seeker/applications"
+              element={<SeekerApplications />}
+            />
+            <Route
+              path="/dashboard/seeker/profile"
+              element={<SeekerProfile />}
+            />
+            <Route
+              path="/dashboard/seeker/saved-jobs"
+              element={<SeekerSavedJobs />}
+            />
 
             {/* Dashboard Routes */}
             <Route path="/dashboard/seeker" element={<SeekerDashboard />} />
