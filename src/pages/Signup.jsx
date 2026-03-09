@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
-  UserPlus,
-  Mail,
-  Lock,
-  User,
   Briefcase,
   Eye,
   EyeOff,
+  Lock,
+  Mail,
+  User,
+  UserPlus,
 } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
 
 const Signup = () => {
@@ -233,9 +233,9 @@ const Signup = () => {
                   <option value="seeker" className="dark:bg-gray-700">
                     Find a Job (Job Seeker)
                   </option>
-                  <option value="admin" className="dark:bg-gray-700">
+                  {/* <option value="admin" className="dark:bg-gray-700">
                     Post a Job (Employer)
-                  </option>
+                  </option> */}
                 </select>
               </div>
             </div>
