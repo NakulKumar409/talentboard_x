@@ -207,7 +207,7 @@ const SeekerDashboard = () => {
   return (
     <DashboardLayout title="Overview" navItems={navItems}>
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -271,7 +271,7 @@ const SeekerDashboard = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Profile Summary */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
