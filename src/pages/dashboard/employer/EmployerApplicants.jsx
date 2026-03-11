@@ -27,6 +27,7 @@ import {
   Clock,
   CheckCircle,
   XCircle,
+  File,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../../components/layout/DashboardLayout";
@@ -42,6 +43,7 @@ const EmployerApplicants = () => {
   const [jobs, setJobs] = useState([]);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [showApplicantModal, setShowApplicantModal] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -218,24 +220,73 @@ const EmployerApplicants = () => {
   };
 
   const handleDownloadResume = async (applicationId) => {
+    setDownloading(true);
     try {
       const response = await api.get(`/applications/${applicationId}/resume`, {
         responseType: "blob",
       });
 
+      // Get filename from Content-Disposition header or use default
+      const contentDisposition = response.headers["content-disposition"];
+      let filename = "resume.pdf";
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(
+          /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+        );
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, "");
+        }
+      }
+
+      // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "resume.pdf");
+      link.setAttribute("download", filename);
       document.body.appendChild(link);
       link.click();
       link.remove();
 
+      // Clean up the URL object
+      window.URL.revokeObjectURL(url);
+
       toast.success("Resume downloaded successfully");
     } catch (error) {
       console.error("Download failed:", error);
-      toast.error("Failed to download resume");
+
+      // More specific error message
+      if (error.response?.status === 404) {
+        toast.error("Resume not found for this application");
+      } else if (error.response?.status === 401) {
+        toast.error("Unauthorized. Please login again.");
+      } else {
+        toast.error(
+          error.response?.data?.message || "Failed to download resume"
+        );
+      }
+    } finally {
+      setDownloading(false);
     }
+  };
+
+  // Function to check if resume exists
+  const hasResume = (applicant) => {
+    return (
+      applicant.resume && applicant.resume !== null && applicant.resume !== ""
+    );
+  };
+
+  // Function to get resume file icon based on file type
+  const getResumeIcon = (filename) => {
+    if (!filename) return <File className="h-5 w-5" />;
+
+    const ext = filename.split(".").pop()?.toLowerCase();
+    if (ext === "pdf") {
+      return <FileText className="h-5 w-5 text-red-500" />;
+    } else if (ext === "doc" || ext === "docx") {
+      return <FileText className="h-5 w-5 text-blue-500" />;
+    }
+    return <File className="h-5 w-5 text-gray-500" />;
   };
 
   const getStatusBadge = (status) => {
@@ -289,14 +340,14 @@ const EmployerApplicants = () => {
     });
   };
 
-  // Full Applicant Detail Modal
+  // Full Applicant Detail Modal with Resume Section
   const ApplicantModal = ({ applicant, onClose }) => {
     if (!applicant) return null;
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-800">
-          <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex justify-between items-center">
+          <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex justify-between items-center z-10">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Applicant Profile
             </h2>
@@ -345,6 +396,51 @@ const EmployerApplicants = () => {
               </div>
             </div>
 
+            {/* Resume Section - NEW */}
+            <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl">
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-600" />
+                Resume / CV
+              </h4>
+
+              {hasResume(applicant) ? (
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-3">
+                    {getResumeIcon(applicant.resume)}
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {applicant.resume || "Resume"}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Click download to view the resume
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDownloadResume(applicant._id)}
+                    disabled={downloading}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                    {downloading ? (
+                      <>
+                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                        Downloading...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4" />
+                        Download Resume
+                      </>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+                  <File className="h-8 w-8" />
+                  <p className="text-sm">No resume uploaded</p>
+                </div>
+              )}
+            </div>
+
             {/* Personal Information Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
@@ -376,7 +472,7 @@ const EmployerApplicants = () => {
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                   Applied For
                 </p>
-                <p className="text-sm font-semibold text-gray-900 dark-white">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
                   {applicant.jobId?.title || "N/A"}
                 </p>
               </div>
@@ -556,7 +652,7 @@ const EmployerApplicants = () => {
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
                   Professional Links
                 </h4>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-4">
                   {applicant.github && (
                     <a
                       href={applicant.github}
@@ -571,7 +667,7 @@ const EmployerApplicants = () => {
                       href={applicant.linkedin}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 ml-4">
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400">
                       <ExternalLink className="h-4 w-4" /> LinkedIn
                     </a>
                   )}
@@ -580,7 +676,7 @@ const EmployerApplicants = () => {
                       href={applicant.portfolio}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 ml-4">
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400">
                       <ExternalLink className="h-4 w-4" /> Portfolio
                     </a>
                   )}
@@ -605,10 +701,23 @@ const EmployerApplicants = () => {
             <div className="flex flex-wrap gap-3 pt-6 border-t border-gray-200 dark:border-gray-800">
               <button
                 onClick={() => handleDownloadResume(applicant._id)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                disabled={!applicant.resume}>
-                <Download className="h-4 w-4" />
-                Download Resume
+                disabled={!hasResume(applicant) || downloading}
+                className={`inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-lg transition-colors text-sm font-medium ${
+                  hasResume(applicant) && !downloading
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}>
+                {downloading ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                    Downloading...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4" />
+                    {hasResume(applicant) ? "Download Resume" : "No Resume"}
+                  </>
+                )}
               </button>
               <select
                 value={applicant.status || "Applied"}
@@ -635,8 +744,8 @@ const EmployerApplicants = () => {
     if (filteredApplicants.length === 0) return null;
 
     return (
-      <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 pt-6 mt-6">
-        <div className="text-sm text-gray-700 dark:text-gray-300">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 dark:border-gray-800 pt-6 mt-6">
+        <div className="text-sm text-gray-700 dark:text-gray-300 order-2 sm:order-1">
           Showing{" "}
           <span className="font-medium">
             {(currentPage - 1) * itemsPerPage + 1}
@@ -649,7 +758,7 @@ const EmployerApplicants = () => {
           applicants
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 order-1 sm:order-2">
           <button
             onClick={goToFirstPage}
             disabled={currentPage === 1}
@@ -725,7 +834,7 @@ const EmployerApplicants = () => {
         />
       )}
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-4 sm:p-6">
         {/* Header with Stats and Filters */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
           <div>
@@ -803,7 +912,7 @@ const EmployerApplicants = () => {
                     setSelectedApplicant(app);
                     setShowApplicantModal(true);
                   }}>
-                  <div className="p-6">
+                  <div className="p-4 sm:p-6">
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                       {/* Left Section - Candidate Info */}
                       <div className="flex-1 min-w-0">
@@ -849,6 +958,14 @@ const EmployerApplicants = () => {
                                 Applied {formatDate(app.createdAt)}
                               </span>
                             </div>
+
+                            {/* Resume Indicator */}
+                            {hasResume(app) && (
+                              <div className="flex items-center gap-2 mt-3 text-xs text-green-600 dark:text-green-400">
+                                {getResumeIcon(app.resume)}
+                                <span>Resume uploaded</span>
+                              </div>
+                            )}
 
                             {/* Skills Preview */}
                             {app.skills && app.skills.length > 0 && (
