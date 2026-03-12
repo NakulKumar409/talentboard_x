@@ -219,55 +219,55 @@ const EmployerApplicants = () => {
     }
   };
 
-  const handleDownloadResume = async (applicationId) => {
-    setDownloading(true);
-    try {
-      const response = await api.get(`/applications/${applicationId}/resume`, {
-        responseType: "blob",
-      });
+    const handleDownloadResume = async (applicationId) => {
+        setDownloading(true);
+        try {
+        const response = await api.get(`/applications/${applicationId}/resume`, {
+            responseType: "blob",
+        });
 
-      // Get filename from Content-Disposition header or use default
-      const contentDisposition = response.headers["content-disposition"];
-      let filename = "resume.pdf";
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(
-          /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
-        );
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1].replace(/['"]/g, "");
+        // Get filename from Content-Disposition header or use default
+        const contentDisposition = response.headers["content-disposition"];
+        let filename = "resume.pdf";
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(
+            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+            );
+            if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1].replace(/['"]/g, "");
+            }
         }
-      }
 
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+        // Create download link
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
 
-      // Clean up the URL object
-      window.URL.revokeObjectURL(url);
+        // Clean up the URL object
+        window.URL.revokeObjectURL(url);
 
-      toast.success("Resume downloaded successfully");
-    } catch (error) {
-      console.error("Download failed:", error);
+        toast.success("Resume downloaded successfully");
+        } catch (error) {
+        console.error("Download failed:", error);
 
-      // More specific error message
-      if (error.response?.status === 404) {
-        toast.error("Resume not found for this application");
-      } else if (error.response?.status === 401) {
-        toast.error("Unauthorized. Please login again.");
-      } else {
-        toast.error(
-          error.response?.data?.message || "Failed to download resume"
-        );
-      }
-    } finally {
-      setDownloading(false);
-    }
-  };
+        // More specific error message
+        if (error.response?.status === 404) {
+            toast.error("Resume not found for this application");
+        } else if (error.response?.status === 401) {
+            toast.error("Unauthorized. Please login again.");
+        } else {
+            toast.error(
+            error.response?.data?.message || "Failed to download resume"
+            );
+        }
+        } finally {
+        setDownloading(false);
+        }
+    };
 
   // Function to check if resume exists
   const hasResume = (applicant) => {
