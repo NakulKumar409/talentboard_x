@@ -1,5 +1,5 @@
 // src/pages/dashboard/employer/EmployerApplicants.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Briefcase,
@@ -28,6 +28,12 @@ import {
   CheckCircle,
   XCircle,
   File,
+  Loader2,
+  AlertCircle,
+  Github,
+  Linkedin,
+  Globe,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import DashboardLayout from "../../../components/layout/DashboardLayout";
@@ -36,19 +42,27 @@ import api from "../../../utils/api";
 const EmployerApplicants = () => {
   const navigate = useNavigate();
   const [applicants, setApplicants] = useState([]);
-  const [filteredApplicants, setFilteredApplicants] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedJob, setSelectedJob] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
   const [jobs, setJobs] = useState([]);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [showApplicantModal, setShowApplicantModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingId, setDownloadingId] = useState(null);
+
+  // Filter states
+  const [selectedJob, setSelectedJob] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+
+  // Loading states
+  const [loading, setLoading] = useState(true);
+  const [statusUpdating, setStatusUpdating] = useState(null);
+  const [error, setError] = useState(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(3);
-  const [paginatedItems, setPaginatedItems] = useState([]);
+  const [itemsPerPage] = useState(5);
+
+  // Search state
+  const [searchTerm, setSearchTerm] = useState("");
 
   const navItems = [
     { label: "Overview", href: "/dashboard/employer", icon: TrendingUp },
@@ -61,232 +75,278 @@ const EmployerApplicants = () => {
     { label: "Post Job", href: "/dashboard/employer/post", icon: PlusCircle },
   ];
 
+  // Fetch data on mount
   useEffect(() => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    filterApplicants();
-  }, [selectedJob, selectedStatus, applicants]);
+  // Filter applicants based on selected filters and search
+  const filteredApplicants = useMemo(() => {
+    if (!applicants.length) return [];
 
-  // Update pagination when filtered applicants change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filteredApplicants]);
-
-  useEffect(() => {
-    // Calculate paginated items
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    setPaginatedItems(
-      filteredApplicants.slice(indexOfFirstItem, indexOfLastItem)
-    );
-  }, [filteredApplicants, currentPage, itemsPerPage]);
-
-  // Pagination functions
-  const totalPages = Math.ceil(filteredApplicants.length / itemsPerPage);
-
-  const goToPage = (page) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const goToFirstPage = () => goToPage(1);
-  const goToLastPage = () => goToPage(totalPages);
-  const goToNextPage = () => goToPage(currentPage + 1);
-  const goToPrevPage = () => goToPage(currentPage - 1);
-
-  // ---------------- FETCH ALL APPLICATIONS ----------------
-  const fetchApplications = async () => {
-    try {
-      const response = await api.get("/applications");
-
-      console.log("Applications API Response:", response.data);
-
-      let applicationsData = [];
-
-      if (
-        response.data &&
-        response.data.success &&
-        response.data.applications
-      ) {
-        applicationsData = response.data.applications;
-        console.log(`Total applications from API: ${response.data.total}`);
-      } else if (response.data && response.data.applications) {
-        applicationsData = response.data.applications;
-      } else if (Array.isArray(response.data)) {
-        applicationsData = response.data;
-      }
-
-      return applicationsData;
-    } catch (error) {
-      console.error("Error fetching applications:", error);
-      throw error;
-    }
-  };
-
-  // ---------------- FETCH EMPLOYER JOBS ----------------
-  const fetchJobs = async () => {
-    try {
-      const response = await api.get("/jobs");
-
-      let jobsData = [];
-      if (response.data && response.data.applications) {
-        jobsData = response.data.applications;
-      } else if (Array.isArray(response.data)) {
-        jobsData = response.data;
-      }
-
-      // Filter for employer's jobs (based on company name)
-      const employerJobs = jobsData.filter(
-        (job) => job.company === "Google" || job.company === "Tech Corp"
-      );
-
-      return employerJobs;
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-      return [];
-    }
-  };
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [jobsData, applicationsData] = await Promise.all([
-        fetchJobs(),
-        fetchApplications(),
-      ]);
-
-      console.log("Jobs loaded:", jobsData);
-      console.log("Applications loaded:", applicationsData);
-
-      setJobs(jobsData);
-      const jobIds = jobsData.map((job) => job._id);
-
-      const relevantApplications = applicationsData.filter((app) => {
-        const jobId = app.jobId?._id || app.jobId;
-        return jobIds.includes(jobId);
-      });
-
-      console.log("Relevant applications:", relevantApplications);
-      setApplicants(relevantApplications);
-      setFilteredApplicants(relevantApplications);
-
-      if (relevantApplications.length === 0) {
-        toast.info("No applications found for your jobs");
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      toast.error("Failed to load applicants");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterApplicants = () => {
     let filtered = [...applicants];
 
+    // Apply job filter
     if (selectedJob !== "all") {
-      filtered = filtered.filter(
-        (app) => (app.jobId?._id || app.jobId) === selectedJob
-      );
+      filtered = filtered.filter((app) => {
+        const jobId = app.jobId?._id || app.jobId;
+        return jobId === selectedJob;
+      });
     }
 
+    // Apply status filter
     if (selectedStatus !== "all") {
       filtered = filtered.filter(
         (app) => app.status?.toLowerCase() === selectedStatus.toLowerCase()
       );
     }
 
-    setFilteredApplicants(filtered);
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter(
+        (app) =>
+          app.fullName?.toLowerCase().includes(term) ||
+          app.email?.toLowerCase().includes(term) ||
+          app.phone?.includes(term) ||
+          app.jobId?.title?.toLowerCase().includes(term)
+      );
+    }
+
+    return filtered;
+  }, [applicants, selectedJob, selectedStatus, searchTerm]);
+
+  // Pagination calculations
+  const paginatedItems = useMemo(() => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    return filteredApplicants.slice(indexOfFirstItem, indexOfLastItem);
+  }, [filteredApplicants, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredApplicants.length / itemsPerPage);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedJob, selectedStatus, searchTerm]);
+
+  // Fetch all applications
+  const fetchData = async () => {
+    setLoading(true);
+    const startTime = Date.now();
+    setError(null);
+
+    try {
+      console.log("Fetching applications...");
+      const response = await api.get("/applications");
+      console.log("API Response:", response.data);
+
+      let applicationsData = [];
+
+      // Handle different response structures
+      if (response.data?.success && response.data.applications) {
+        applicationsData = response.data.applications;
+      } else if (response.data?.applications) {
+        applicationsData = response.data.applications;
+      } else if (Array.isArray(response.data)) {
+        applicationsData = response.data;
+      }
+
+      console.log("Applications data extracted:", applicationsData.length);
+
+      if (applicationsData.length === 0) {
+        setApplicants([]);
+        setJobs([]);
+        toast.info("No applications found");
+        return;
+      }
+
+      // Extract unique jobs from applications
+      const jobMap = new Map();
+
+      applicationsData.forEach((app) => {
+        if (app.jobId && app.jobId._id) {
+          if (!jobMap.has(app.jobId._id)) {
+            jobMap.set(app.jobId._id, {
+              _id: app.jobId._id,
+              title: app.jobId.title || "Unknown Position",
+              company: app.jobId.company || "Unknown Company",
+              location: app.jobId.location || "Unknown Location",
+            });
+          }
+        }
+      });
+
+      const jobsList = Array.from(jobMap.values());
+      console.log("Jobs extracted from applications:", jobsList);
+
+      setJobs(jobsList);
+      setApplicants(applicationsData);
+
+      toast.success(
+        `${applicationsData.length} applications loaded successfully`
+      );
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(error.response?.data?.message || "Failed to load applicants");
+      toast.error(error.response?.data?.message || "Failed to load applicants");
+    } finally {
+      // Ensure minimum 3 second loading time
+      const elapsedTime = Date.now() - startTime;
+      const minimumLoadTime = 3000;
+
+      if (elapsedTime < minimumLoadTime) {
+        setTimeout(() => {
+          setLoading(false);
+        }, minimumLoadTime - elapsedTime);
+      } else {
+        setLoading(false);
+      }
+    }
   };
 
+  // Handle status update
   const handleStatusChange = async (applicationId, newStatus) => {
+    setStatusUpdating(applicationId);
     try {
       await api.patch(`/applications/${applicationId}/status`, {
         status: newStatus,
       });
 
-      const updatedApplicants = applicants.map((app) =>
-        app._id === applicationId ? { ...app, status: newStatus } : app
+      setApplicants((prev) =>
+        prev.map((app) =>
+          app._id === applicationId ? { ...app, status: newStatus } : app
+        )
       );
-      setApplicants(updatedApplicants);
+
+      // Also update in modal if open
+      if (selectedApplicant?._id === applicationId) {
+        setSelectedApplicant((prev) => ({ ...prev, status: newStatus }));
+      }
 
       toast.success(`Status updated to ${newStatus}`);
     } catch (error) {
       console.error("Status update failed:", error);
       toast.error(error.response?.data?.message || "Failed to update status");
+    } finally {
+      setStatusUpdating(null);
     }
   };
 
-    const handleDownloadResume = async (applicationId) => {
-        setDownloading(true);
-        try {
-        const response = await api.get(`/applications/${applicationId}/resume`, {
-            responseType: "blob",
-        });
+  // Handle resume download
+  const handleDownloadResume = async (applicationId) => {
+    setDownloading(true);
+    setDownloadingId(applicationId);
 
-        // Get filename from Content-Disposition header or use default
-        const contentDisposition = response.headers["content-disposition"];
-        let filename = "resume.pdf";
-        if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(
-            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
-            );
-            if (filenameMatch && filenameMatch[1]) {
-            filename = filenameMatch[1].replace(/['"]/g, "");
-            }
+    try {
+      console.log("Downloading resume for application:", applicationId);
+
+      const response = await api.get(`/applications/${applicationId}/resume`, {
+        responseType: "blob",
+        timeout: 30000, // 30 second timeout
+      });
+
+      // Check if response is valid
+      if (!response.data || response.data.size === 0) {
+        throw new Error("Resume file is empty");
+      }
+
+      // Get filename from Content-Disposition header
+      const contentDisposition = response.headers["content-disposition"];
+      let filename = "resume.pdf";
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(
+          /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+        );
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, "");
         }
+      }
 
-        // Create download link
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", filename);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+      // If no filename in header, extract from URL or use default
+      if (filename === "resume.pdf") {
+        const applicant = applicants.find((a) => a._id === applicationId);
+        if (applicant?.resume) {
+          const resumePath = applicant.resume;
+          const originalName = resumePath.split(/[\\/]/).pop();
+          if (originalName) {
+            filename = originalName;
+          }
+        }
+      }
 
-        // Clean up the URL object
+      // Ensure .pdf extension if not present
+      if (!filename.toLowerCase().endsWith(".pdf")) {
+        filename += ".pdf";
+      }
+
+      console.log("Downloading as:", filename);
+
+      // Create download link
+      const url = window.URL.createObjectURL(
+        new Blob([response.data], {
+          type: "application/pdf",
+        })
+      );
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
+      }, 100);
 
-        toast.success("Resume downloaded successfully");
-        } catch (error) {
-        console.error("Download failed:", error);
+      toast.success("Resume downloaded successfully");
+    } catch (error) {
+      console.error("Download failed:", error);
 
-        // More specific error message
-        if (error.response?.status === 404) {
-            toast.error("Resume not found for this application");
-        } else if (error.response?.status === 401) {
-            toast.error("Unauthorized. Please login again.");
-        } else {
-            toast.error(
-            error.response?.data?.message || "Failed to download resume"
-            );
-        }
-        } finally {
-        setDownloading(false);
-        }
-    };
+      if (error.code === "ECONNABORTED") {
+        toast.error("Download timed out. Please try again.");
+      } else if (error.response?.status === 404) {
+        toast.error("Resume not found for this application");
+      } else if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+      } else if (error.response?.status === 403) {
+        toast.error("You don't have permission to download this resume");
+      } else {
+        toast.error(
+          error.response?.data?.message || "Failed to download resume"
+        );
+      }
+    } finally {
+      setDownloading(false);
+      setDownloadingId(null);
+    }
+  };
 
-  // Function to check if resume exists
+  // Helper functions
   const hasResume = (applicant) => {
     return (
-      applicant.resume && applicant.resume !== null && applicant.resume !== ""
+      applicant?.resume &&
+      applicant.resume !== null &&
+      applicant.resume !== "" &&
+      !applicant.resume.includes("null") &&
+      !applicant.resume.includes("undefined")
     );
   };
 
-  // Function to get resume file icon based on file type
   const getResumeIcon = (filename) => {
-    if (!filename) return <File className="h-5 w-5" />;
+    if (!filename) return <File className="h-4 w-4 sm:h-5 sm:w-5" />;
 
     const ext = filename.split(".").pop()?.toLowerCase();
     if (ext === "pdf") {
-      return <FileText className="h-5 w-5 text-red-500" />;
+      return <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />;
     } else if (ext === "doc" || ext === "docx") {
-      return <FileText className="h-5 w-5 text-blue-500" />;
+      return <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />;
     }
-    return <File className="h-5 w-5 text-gray-500" />;
+    return <File className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />;
   };
 
   const getStatusBadge = (status) => {
@@ -295,28 +355,39 @@ const EmployerApplicants = () => {
     const statusConfig = {
       shortlisted: {
         icon: CheckCircle,
-        class: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        class:
+          "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800",
         label: "Shortlisted",
       },
       interview: {
         icon: Calendar,
-        class: "bg-purple-50 text-purple-700 border-purple-200",
+        class:
+          "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800",
         label: "Interview",
       },
       hired: {
         icon: Award,
-        class: "bg-blue-50 text-blue-700 border-blue-200",
+        class:
+          "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
         label: "Hired",
       },
       rejected: {
         icon: XCircle,
-        class: "bg-red-50 text-red-700 border-red-200",
+        class:
+          "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800",
         label: "Rejected",
       },
       applied: {
         icon: Clock,
-        class: "bg-gray-50 text-gray-700 border-gray-200",
+        class:
+          "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
         label: "Applied",
+      },
+      "under review": {
+        icon: Clock,
+        class:
+          "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800",
+        label: "Under Review",
       },
     };
 
@@ -325,104 +396,213 @@ const EmployerApplicants = () => {
 
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium border ${config.class} rounded-full`}>
-        <Icon className="h-3 w-3" />
+        className={`inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 text-xs font-medium border rounded-full ${config.class}`}>
+        <Icon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
         {config.label}
       </span>
     );
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Invalid date";
+
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return "Invalid date";
+    }
   };
 
-  // Full Applicant Detail Modal with Resume Section
+  const formatDisplayValue = (value) => {
+    if (!value || value === "" || value === "null" || value === "undefined") {
+      return "N/A";
+    }
+    return value;
+  };
+
+  // Pagination handlers
+  const goToPage = useCallback(
+    (page) => {
+      setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [totalPages]
+  );
+
+  // Loading Spinner Component
+  const LoadingSpinner = () => (
+    <div className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20">
+      <div className="relative">
+        <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full border-4 border-gray-200 dark:border-gray-700 border-t-blue-600 animate-spin"></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Users className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 animate-pulse" />
+        </div>
+      </div>
+      <p className="mt-4 text-sm text-gray-600 dark:text-gray-400 font-medium">
+        Loading applicants...
+      </p>
+      <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+        Please wait while we fetch the data
+      </p>
+    </div>
+  );
+
+  // Error Component
+  const ErrorDisplay = ({ message, onRetry }) => (
+    <div className="text-center py-12 sm:py-16">
+      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <AlertCircle className="h-8 w-8 sm:h-10 sm:w-10 text-red-600 dark:text-red-400" />
+      </div>
+      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        Something went wrong
+      </h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
+        {message ||
+          "Failed to load applicants. Please check your connection and try again."}
+      </p>
+      <button
+        onClick={onRetry}
+        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+        Try Again
+      </button>
+    </div>
+  );
+
+  // Info Card Component
+  const InfoCard = ({ label, value, subValue, icon }) => {
+    const displayValue = formatDisplayValue(value);
+
+    return (
+      <div className="bg-gray-50 dark:bg-gray-800/50 p-3 sm:p-4 rounded-xl min-w-0">
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">
+          {label}
+        </p>
+        <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1 truncate">
+          {icon}
+          {displayValue}
+        </p>
+        {subValue && (
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 sm:mt-1 truncate">
+            {formatDisplayValue(subValue)}
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  // Applicant Modal Component (Full Details)
   const ApplicantModal = ({ applicant, onClose }) => {
     if (!applicant) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-800">
-          <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex justify-between items-center z-10">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+      <div
+        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4"
+        onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-800">
+          {/* Modal Header */}
+          <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center z-10">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <UserCircle className="h-5 w-5 text-blue-600" />
               Applicant Profile
             </h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-              <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+              className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              aria-label="Close modal">
+              <X className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 dark:text-gray-400" />
             </button>
           </div>
 
-          <div className="p-6 space-y-8">
-            {/* Header Section */}
-            <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-              <div className="flex items-start gap-5">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-3xl font-bold text-white">
-                    {applicant.fullName?.charAt(0) ||
-                      applicant.userId?.name?.charAt(0) ||
-                      "A"}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {applicant.fullName || applicant.userId?.name}
-                  </h3>
-                  <div className="space-y-1.5">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                      <Mail className="h-4 w-4" /> {applicant.email}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                      <Phone className="h-4 w-4" /> {applicant.phone || "N/A"}
-                    </p>
-                  </div>
-                </div>
+          {/* Modal Content */}
+          <div className="p-4 sm:p-6 space-y-6">
+            {/* Header Section with Avatar */}
+            <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                <span className="text-2xl sm:text-3xl font-bold text-white">
+                  {applicant.fullName?.charAt(0) || "A"}
+                </span>
               </div>
-              <div className="flex flex-col items-end gap-3">
-                <div className="text-right">
-                  <div className="text-5xl font-bold text-blue-600 dark:text-blue-400">
-                    {applicant.aiScore || 0}%
+
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                      {formatDisplayValue(applicant.fullName)}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      Applied for:{" "}
+                      <span className="font-medium">
+                        {applicant.jobId?.title || "Unknown Position"}
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      Applied on: {formatDate(applicant.createdAt)}
+                    </p>
                   </div>
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
-                    AI Match Score
-                  </p>
+                  <div className="flex flex-col items-end gap-2">
+                    {getStatusBadge(applicant.status)}
+                    <div className="text-right">
+                      <span className="text-2xl font-bold text-blue-600">
+                        {applicant.aiScore || 0}%
+                      </span>
+                      <span className="text-xs text-gray-500 ml-1">Match</span>
+                    </div>
+                  </div>
                 </div>
-                {getStatusBadge(applicant.status)}
               </div>
             </div>
 
-            {/* Resume Section - NEW */}
-            <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl">
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-blue-600" />
+            {/* Contact Information */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <InfoCard
+                label="Email"
+                value={applicant.email}
+                icon={
+                  <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
+                }
+              />
+              <InfoCard
+                label="Phone"
+                value={applicant.phone}
+                icon={
+                  <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
+                }
+              />
+            </div>
+
+            {/* Resume Section */}
+            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 sm:p-5 rounded-xl">
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 Resume / CV
               </h4>
 
               {hasResume(applicant) ? (
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
                     {getResumeIcon(applicant.resume)}
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {applicant.resume || "Resume"}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {applicant.resume.split(/[\\/]/).pop() || "Resume"}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Click download to view the resume
+                        Click to download
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => handleDownloadResume(applicant._id)}
-                    disabled={downloading}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-                    {downloading ? (
+                    disabled={downloading && downloadingId === applicant._id}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                    {downloading && downloadingId === applicant._id ? (
                       <>
-                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         Downloading...
                       </>
                     ) : (
@@ -435,163 +615,119 @@ const EmployerApplicants = () => {
                 </div>
               ) : (
                 <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
-                  <File className="h-8 w-8" />
+                  <File className="h-8 w-8 text-gray-400" />
                   <p className="text-sm">No resume uploaded</p>
                 </div>
               )}
             </div>
 
-            {/* Personal Information Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  Date of Birth
-                </p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {applicant.dob ? formatDate(applicant.dob) : "N/A"}
-                </p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  Gender
-                </p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {applicant.gender || "N/A"}
-                </p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  Location
-                </p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1">
-                  <MapPin className="h-4 w-4 text-gray-400" />
-                  {applicant.city || "N/A"}, {applicant.country || "N/A"}
-                </p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  Applied For
-                </p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {applicant.jobId?.title || "N/A"}
-                </p>
+            {/* Personal Details */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <UserCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                Personal Details
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <InfoCard
+                  label="Date of Birth"
+                  value={formatDate(applicant.dob)}
+                />
+                <InfoCard label="Gender" value={applicant.gender} />
+                <InfoCard
+                  label="Location"
+                  value={`${applicant.city || ""}, ${applicant.country || ""}`}
+                />
               </div>
             </div>
 
             {/* Address */}
-            <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
-                Address
-              </p>
-              <p className="text-sm text-gray-900 dark:text-white">
-                {applicant.address || "N/A"}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {applicant.city}, {applicant.state} - {applicant.pincode}
-              </p>
-            </div>
+            {(applicant.address ||
+              applicant.city ||
+              applicant.state ||
+              applicant.pincode) && (
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                  Address
+                </p>
+                <p className="text-sm text-gray-900 dark:text-white">
+                  {formatDisplayValue(applicant.address)}
+                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  {[applicant.city, applicant.state, applicant.pincode]
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
+              </div>
+            )}
 
-            {/* ID Details */}
+            {/* Government IDs */}
             <div>
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-blue-600" />
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 Government IDs
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Aadhaar
-                  </p>
-                  <p className="text-sm font-mono font-semibold text-gray-900 dark:text-white">
-                    {applicant.aadhaar || "N/A"}
-                  </p>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    PAN
-                  </p>
-                  <p className="text-sm font-mono font-semibold text-gray-900 dark:text-white">
-                    {applicant.pan || "N/A"}
-                  </p>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    UAN
-                  </p>
-                  <p className="text-sm font-mono font-semibold text-gray-900 dark:text-white">
-                    {applicant.uan || "N/A"}
-                  </p>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <InfoCard label="Aadhaar" value={applicant.aadhaar} />
+                <InfoCard label="PAN" value={applicant.pan} />
+                <InfoCard label="UAN" value={applicant.uan} />
               </div>
             </div>
 
             {/* Education */}
             <div>
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-blue-600" />
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 Education
               </h4>
               <div className="space-y-3">
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Class 10th
-                  </p>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {applicant.tenthBoard || "N/A"} •{" "}
-                    {applicant.tenthPercentage || "N/A"}% •{" "}
-                    {applicant.tenthYear || "N/A"}
-                  </p>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                    Class 12th
-                  </p>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {applicant.twelfthBoard || "N/A"} •{" "}
-                    {applicant.twelfthPercentage || "N/A"}% •{" "}
-                    {applicant.twelfthYear || "N/A"}
-                  </p>
-                </div>
+                <InfoCard
+                  label="Class 10th"
+                  value={`${applicant.tenthBoard || ""} • ${
+                    applicant.tenthPercentage || ""
+                  }% • ${applicant.tenthYear || ""}`}
+                />
+                <InfoCard
+                  label="Class 12th"
+                  value={`${applicant.twelfthBoard || ""} • ${
+                    applicant.twelfthPercentage || ""
+                  }% • ${applicant.twelfthYear || ""}`}
+                />
                 {applicant.graduationCollege && (
-                  <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      Graduation
-                    </p>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {applicant.graduationDegree} •{" "}
-                      {applicant.graduationCollege}
-                    </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      {applicant.graduationPercentage}% •{" "}
-                      {applicant.graduationYear}
-                    </p>
-                  </div>
+                  <InfoCard
+                    label="Graduation"
+                    value={`${applicant.graduationDegree || ""} • ${
+                      applicant.graduationCollege || ""
+                    }`}
+                    subValue={`${applicant.graduationPercentage || ""}% • ${
+                      applicant.graduationYear || ""
+                    }`}
+                  />
                 )}
               </div>
             </div>
 
-            {/* Experience */}
+            {/* Work Experience */}
             <div>
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Briefcase className="h-5 w-5 text-blue-600" />
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 Work Experience
               </h4>
               {applicant.companyName ? (
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl">
-                  <div className="flex flex-wrap justify-between items-start gap-4">
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
+                  <div className="flex flex-wrap justify-between items-start gap-3">
                     <div>
                       <p className="font-semibold text-gray-900 dark:text-white">
-                        {applicant.companyName}
+                        {formatDisplayValue(applicant.companyName)}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {applicant.companyRole}
+                        {formatDisplayValue(applicant.companyRole)}
                       </p>
                     </div>
                     <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
-                      {applicant.experienceYears} years
+                      {applicant.experienceYears || "0"} years
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-500 mt-3">
+                  <p className="text-xs text-gray-500 mt-3">
                     {formatDate(applicant.startDate)} -{" "}
                     {applicant.endDate
                       ? formatDate(applicant.endDate)
@@ -600,10 +736,11 @@ const EmployerApplicants = () => {
                   {applicant.previousCompany && (
                     <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                       <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Previous: {applicant.previousCompany}
+                        Previous:{" "}
+                        {formatDisplayValue(applicant.previousCompany)}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {applicant.previousRole}
+                        {formatDisplayValue(applicant.previousRole)}
                       </p>
                     </div>
                   )}
@@ -617,26 +754,20 @@ const EmployerApplicants = () => {
 
             {/* Skills */}
             <div>
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Award className="h-5 w-5 text-blue-600" />
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <Award className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 Skills
               </h4>
               <div className="flex flex-wrap gap-2">
-                {applicant.skills?.map((skill, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm">
-                    {skill}
-                  </span>
-                ))}
-                {applicant.topSkills?.map((skill, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg text-sm font-medium flex items-center gap-1">
-                    <Award className="h-3 w-3" /> {skill}
-                  </span>
-                ))}
-                {(!applicant.skills || applicant.skills.length === 0) && (
+                {applicant.skills && applicant.skills.length > 0 ? (
+                  applicant.skills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm">
+                      {skill}
+                    </span>
+                  ))
+                ) : (
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     No skills listed
                   </p>
@@ -644,12 +775,12 @@ const EmployerApplicants = () => {
               </div>
             </div>
 
-            {/* Professional Links */}
+            {/* Social Links */}
             {(applicant.github ||
               applicant.linkedin ||
               applicant.portfolio) && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
                   Professional Links
                 </h4>
                 <div className="flex flex-wrap gap-4">
@@ -658,8 +789,9 @@ const EmployerApplicants = () => {
                       href={applicant.github}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400">
-                      <ExternalLink className="h-4 w-4" /> GitHub
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700">
+                      <Github className="h-4 w-4" />
+                      GitHub
                     </a>
                   )}
                   {applicant.linkedin && (
@@ -667,8 +799,9 @@ const EmployerApplicants = () => {
                       href={applicant.linkedin}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400">
-                      <ExternalLink className="h-4 w-4" /> LinkedIn
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700">
+                      <Linkedin className="h-4 w-4" />
+                      LinkedIn
                     </a>
                   )}
                   {applicant.portfolio && (
@@ -676,8 +809,9 @@ const EmployerApplicants = () => {
                       href={applicant.portfolio}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400">
-                      <ExternalLink className="h-4 w-4" /> Portfolio
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700">
+                      <Globe className="h-4 w-4" />
+                      Portfolio
                     </a>
                   )}
                 </div>
@@ -687,51 +821,44 @@ const EmployerApplicants = () => {
             {/* Cover Letter */}
             {applicant.coverLetter && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                   Cover Letter
                 </h4>
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line max-h-60 overflow-y-auto">
                   {applicant.coverLetter}
                 </div>
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex flex-wrap gap-3 pt-6 border-t border-gray-200 dark:border-gray-800">
-              <button
-                onClick={() => handleDownloadResume(applicant._id)}
-                disabled={!hasResume(applicant) || downloading}
-                className={`inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-lg transition-colors text-sm font-medium ${
-                  hasResume(applicant) && !downloading
-                    ? "bg-blue-600 hover:bg-blue-700"
-                    : "bg-gray-400 cursor-not-allowed"
-                }`}>
-                {downloading ? (
-                  <>
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                    Downloading...
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4" />
-                    {hasResume(applicant) ? "Download Resume" : "No Resume"}
-                  </>
+            {/* Status Update */}
+            <div className="border-t border-gray-200 dark:border-gray-800 pt-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Update Application Status
+              </label>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <select
+                  value={applicant.status || "Applied"}
+                  onChange={(e) =>
+                    handleStatusChange(applicant._id, e.target.value)
+                  }
+                  disabled={statusUpdating === applicant._id}
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50">
+                  <option value="Applied">Applied</option>
+                  <option value="Under Review">Under Review</option>
+                  <option value="Shortlisted">Shortlisted</option>
+                  <option value="Interview">Interview</option>
+                  <option value="Hired">Hired</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+
+                {statusUpdating === applicant._id && (
+                  <div className="flex items-center gap-2 text-sm text-blue-600">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Updating...
+                  </div>
                 )}
-              </button>
-              <select
-                value={applicant.status || "Applied"}
-                onChange={(e) =>
-                  handleStatusChange(applicant._id, e.target.value)
-                }
-                className="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="Applied">Applied</option>
-                <option value="Under Review">Under Review</option>
-                <option value="Shortlisted">Shortlisted</option>
-                <option value="Interview">Interview</option>
-                <option value="Hired">Hired</option>
-                <option value="Rejected">Rejected</option>
-              </select>
+              </div>
             </div>
           </div>
         </div>
@@ -744,11 +871,13 @@ const EmployerApplicants = () => {
     if (filteredApplicants.length === 0) return null;
 
     return (
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 dark:border-gray-800 pt-6 mt-6">
-        <div className="text-sm text-gray-700 dark:text-gray-300 order-2 sm:order-1">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 dark:border-gray-800 pt-4 sm:pt-6 mt-4 sm:mt-6">
+        <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 order-2 sm:order-1">
           Showing{" "}
           <span className="font-medium">
-            {(currentPage - 1) * itemsPerPage + 1}
+            {filteredApplicants.length > 0
+              ? (currentPage - 1) * itemsPerPage + 1
+              : 0}
           </span>{" "}
           to{" "}
           <span className="font-medium">
@@ -758,63 +887,39 @@ const EmployerApplicants = () => {
           applicants
         </div>
 
-        <div className="flex items-center gap-2 order-1 sm:order-2">
+        <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2">
           <button
-            onClick={goToFirstPage}
+            onClick={() => goToPage(1)}
             disabled={currentPage === 1}
-            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 sm:p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="First page">
-            <ChevronsLeft className="h-4 w-4" />
+            <ChevronsLeft className="h-3 w-3 sm:h-4 sm:w-4" />
           </button>
           <button
-            onClick={goToPrevPage}
+            onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
-            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 sm:p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Previous page">
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
           </button>
 
-          <div className="flex items-center gap-1">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
-
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => goToPage(pageNum)}
-                  className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
-                    currentPage === pageNum
-                      ? "bg-blue-600 text-white"
-                      : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  }`}>
-                  {pageNum}
-                </button>
-              );
-            })}
-          </div>
+          <span className="text-sm text-gray-700 dark:text-gray-300 px-2">
+            Page {currentPage} of {totalPages || 1}
+          </span>
 
           <button
-            onClick={goToNextPage}
-            disabled={currentPage === totalPages}
-            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages || totalPages === 0}
+            className="p-1.5 sm:p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Next page">
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
           </button>
           <button
-            onClick={goToLastPage}
-            disabled={currentPage === totalPages}
-            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            onClick={() => goToPage(totalPages)}
+            disabled={currentPage === totalPages || totalPages === 0}
+            className="p-1.5 sm:p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Last page">
-            <ChevronsRight className="h-4 w-4" />
+            <ChevronsRight className="h-3 w-3 sm:h-4 sm:w-4" />
           </button>
         </div>
       </div>
@@ -834,32 +939,60 @@ const EmployerApplicants = () => {
         />
       )}
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-4 sm:p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-3 sm:p-4 md:p-6">
         {/* Header with Stats and Filters */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4 sm:mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               Applicants
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
               Manage and review all job applications
             </p>
+            {!loading && !error && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                  Total: {applicants.length}
+                </span>
+                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                  Filtered: {filteredApplicants.length}
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+            {/* Search Bar */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search by name, email, job..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full sm:w-64 px-3 py-1.5 sm:py-2 pl-8 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <Users className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
+            </div>
+
             {/* Job Filter */}
-            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700">
-              <Filter className="h-4 w-4 text-gray-500" />
+            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-gray-200 dark:border-gray-700">
+              <Filter className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
               <select
                 value={selectedJob}
                 onChange={(e) => setSelectedJob(e.target.value)}
-                className="bg-transparent border-0 text-sm text-gray-700 dark:text-gray-300 focus:ring-0">
-                <option value="all">All Jobs</option>
-                {jobs.map((job) => (
-                  <option key={job._id} value={job._id}>
-                    {job.title}
-                  </option>
-                ))}
+                className="bg-transparent border-0 text-xs sm:text-sm text-gray-700 dark:text-gray-300 focus:ring-0 w-full sm:w-auto"
+                disabled={loading || jobs.length === 0}>
+                <option value="all">All Jobs ({applicants.length})</option>
+                {jobs.map((job) => {
+                  const count = applicants.filter(
+                    (app) => (app.jobId?._id || app.jobId) === job._id
+                  ).length;
+                  return (
+                    <option key={job._id} value={job._id}>
+                      {job.title} ({count})
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
@@ -867,7 +1000,8 @@ const EmployerApplicants = () => {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              className="px-2 sm:px-4 py-1.5 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+              disabled={loading}>
               <option value="all">All Status</option>
               <option value="applied">Applied</option>
               <option value="under review">Under Review</option>
@@ -879,107 +1013,120 @@ const EmployerApplicants = () => {
           </div>
         </div>
 
+        {/* Content */}
         {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="animate-pulse h-24 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-            ))}
-          </div>
+          <LoadingSpinner />
+        ) : error ? (
+          <ErrorDisplay message={error} onRetry={fetchData} />
         ) : filteredApplicants.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users className="h-10 w-10 text-gray-400" />
+          <div className="text-center py-8 sm:py-12 md:py-16">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <Users className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-1 sm:mb-2">
               No applications found
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto px-4">
               {applicants.length === 0
-                ? "No one has applied to your jobs yet. Check back later!"
-                : "Try adjusting your filters to see more results."}
+                ? "No applications have been submitted yet."
+                : `No applications match the selected filters.`}
             </p>
+            {(selectedJob !== "all" ||
+              selectedStatus !== "all" ||
+              searchTerm) && (
+              <button
+                onClick={() => {
+                  setSelectedJob("all");
+                  setSelectedStatus("all");
+                  setSearchTerm("");
+                }}
+                className="mt-4 px-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium">
+                Clear all filters
+              </button>
+            )}
           </div>
         ) : (
           <>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {paginatedItems.map((app) => (
                 <div
                   key={app._id}
-                  className="group bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl hover:shadow-lg transition-all duration-200 cursor-pointer"
+                  className="group bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg sm:rounded-xl hover:shadow-lg transition-all duration-200 cursor-pointer"
                   onClick={() => {
                     setSelectedApplicant(app);
                     setShowApplicantModal(true);
                   }}>
-                  <div className="p-4 sm:p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                  <div className="p-3 sm:p-4 md:p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                       {/* Left Section - Candidate Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-3">
                           {/* Avatar */}
-                          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-                            <span className="text-xl font-bold text-white">
-                              {app.fullName?.charAt(0) ||
-                                app.userId?.name?.charAt(0) ||
-                                "A"}
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                            <span className="text-sm sm:text-base font-bold text-white">
+                              {app.fullName?.charAt(0) || "A"}
                             </span>
                           </div>
 
                           {/* Candidate Details */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-3 mb-2">
-                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                                {app.fullName || app.userId?.name}
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate max-w-[150px] sm:max-w-[200px]">
+                                {app.fullName || "Unknown"}
                               </h3>
                               {getStatusBadge(app.status)}
                             </div>
 
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
                               Applied for{" "}
                               <span className="font-medium text-gray-900 dark:text-white">
-                                {app.jobId?.title}
-                              </span>{" "}
-                              at {app.jobId?.company}
+                                {app.jobId?.title || "Unknown Position"}
+                              </span>
                             </p>
 
                             {/* Contact Info */}
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                              <span className="flex items-center gap-1.5">
-                                <Mail className="h-4 w-4" />
-                                {app.email}
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                              <span className="flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                <span className="truncate max-w-[100px] sm:max-w-[150px]">
+                                  {app.email}
+                                </span>
                               </span>
-                              <span className="flex items-center gap-1.5">
-                                <Phone className="h-4 w-4" />
-                                {app.phone || "N/A"}
-                              </span>
-                              <span className="flex items-center gap-1.5">
-                                <Calendar className="h-4 w-4" />
-                                Applied {formatDate(app.createdAt)}
+                              {app.phone && (
+                                <span className="flex items-center gap-1">
+                                  <Phone className="h-3 w-3" />
+                                  {app.phone}
+                                </span>
+                              )}
+                              <span className="hidden sm:flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {formatDate(app.createdAt)}
                               </span>
                             </div>
 
                             {/* Resume Indicator */}
                             {hasResume(app) && (
-                              <div className="flex items-center gap-2 mt-3 text-xs text-green-600 dark:text-green-400">
+                              <div className="flex items-center gap-1 mt-2 text-xs text-green-600">
                                 {getResumeIcon(app.resume)}
-                                <span>Resume uploaded</span>
+                                <span>Resume available</span>
                               </div>
                             )}
 
                             {/* Skills Preview */}
                             {app.skills && app.skills.length > 0 && (
-                              <div className="flex flex-wrap gap-2 mt-3">
-                                {app.skills.slice(0, 4).map((skill, i) => (
+                              <div className="hidden sm:flex flex-wrap gap-1 mt-2">
+                                {app.skills.slice(0, 3).map((skill, i) => (
                                   <span
                                     key={i}
-                                    className="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium">
-                                    {skill}
+                                    className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-xs">
+                                    {skill.length > 15
+                                      ? skill.substring(0, 12) + "..."
+                                      : skill}
                                   </span>
                                 ))}
-                                {app.skills.length > 4 && (
-                                  <span className="px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium">
-                                    +{app.skills.length - 4}
+                                {app.skills.length > 3 && (
+                                  <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-xs">
+                                    +{app.skills.length - 3}
                                   </span>
                                 )}
                               </div>
@@ -989,23 +1136,22 @@ const EmployerApplicants = () => {
                       </div>
 
                       {/* Right Section - Score & Actions */}
-                      <div className="flex items-center gap-6 lg:flex-col lg:items-end">
-                        <div className="text-right">
-                          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                      <div className="flex items-center justify-between lg:flex-col lg:items-end gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className="text-lg sm:text-xl font-bold text-blue-600">
                             {app.aiScore || 0}%
                           </div>
-                          <div className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                            Match Score
-                          </div>
+                          <div className="text-xs text-gray-500">Match</div>
                         </div>
                         <button
-                          className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedApplicant(app);
                             setShowApplicantModal(true);
-                          }}>
-                          <Eye className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                          }}
+                          aria-label="View details">
+                          <Eye className="h-4 w-4 text-gray-600" />
                         </button>
                       </div>
                     </div>

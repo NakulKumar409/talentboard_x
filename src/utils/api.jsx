@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://talentboard-x-api-with-mongo-db.onrender.com",
+  baseURL: "http://localhost:3004",
 });
 
 // token auto attach
