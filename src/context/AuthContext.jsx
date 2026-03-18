@@ -33,55 +33,84 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Fixed useEffect with proper error handling
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    try {
+      const savedUser = localStorage.getItem("user");
+
+      // Check if savedUser exists and is valid JSON
+      if (savedUser && savedUser !== "undefined" && savedUser !== "null") {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+      }
+    } catch (error) {
+      console.error("Error loading user from localStorage:", error);
+      // Clear corrupted data
+      localStorage.removeItem("user");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = (email, password) => {
-    let loggedInUser = null;
+    try {
+      let loggedInUser = null;
 
-    if (email.includes("admin")) {
-      loggedInUser = mockUsers.admin;
-    } else if (email.includes("seeker")) {
-      loggedInUser = mockUsers.seeker;
-    } else if (email.includes("employer")) {
-      loggedInUser = mockUsers.employer;
+      if (email.includes("admin")) {
+        loggedInUser = mockUsers.admin;
+      } else if (email.includes("seeker")) {
+        loggedInUser = mockUsers.seeker;
+      } else if (email.includes("employer")) {
+        loggedInUser = mockUsers.employer;
+      }
+
+      if (loggedInUser) {
+        setUser(loggedInUser);
+        localStorage.setItem("user", JSON.stringify(loggedInUser));
+        return { success: true, user: loggedInUser };
+      }
+
+      return { success: false, error: "Invalid credentials" };
+    } catch (error) {
+      console.error("Login error:", error);
+      return { success: false, error: "Login failed" };
     }
-
-    if (loggedInUser) {
-      setUser(loggedInUser);
-      localStorage.setItem("user", JSON.stringify(loggedInUser));
-      return { success: true, user: loggedInUser };
-    }
-
-    return { success: false, error: "Invalid credentials" };
   };
 
   const signup = (userData) => {
-    const newUser = {
-      id: Date.now().toString(),
-      ...userData,
-    };
+    try {
+      const newUser = {
+        id: Date.now().toString(),
+        ...userData,
+      };
 
-    setUser(newUser);
-    localStorage.setItem("user", JSON.stringify(newUser));
-    return { success: true, user: newUser };
+      setUser(newUser);
+      localStorage.setItem("user", JSON.stringify(newUser));
+      return { success: true, user: newUser };
+    } catch (error) {
+      console.error("Signup error:", error);
+      return { success: false, error: "Signup failed" };
+    }
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
+    try {
+      setUser(null);
+      localStorage.removeItem("user"); // This completely removes the item
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const updateProfile = (profileData) => {
-    if (user) {
-      const updatedUser = { ...user, ...profileData };
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+    try {
+      if (user) {
+        const updatedUser = { ...user, ...profileData };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      }
+    } catch (error) {
+      console.error("Update profile error:", error);
     }
   };
 

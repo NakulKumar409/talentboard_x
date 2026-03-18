@@ -20,8 +20,8 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import DashboardLayout from "../components/layout/DashboardLayout";
-import api from "../utils/api";
+import DashboardLayout from "../../../components/layout/DashboardLayout";
+import api from "../../../utils/api";
 
 // Mock user data
 const mockUser = {
@@ -29,10 +29,10 @@ const mockUser = {
   name: "Jane Employer",
   email: "employer@example.com",
   role: "employer",
-  company: "Tech Corp",
+  company: "Jasiq Labs Pvt Ltd",
   companySize: "50-100 employees",
   industry: "Technology",
-  location: "San Francisco, CA",
+  location: "Bhopal, Madhya Pradesh",
 };
 
 const EmployerDashboard = () => {
