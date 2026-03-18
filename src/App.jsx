@@ -4,12 +4,12 @@ import Footer from "./components/layout/Footer";
 import Navbar from "./components/layout/Navbar";
 import AdminDashboard from "./pages/AdminDashboard";
 import ApplyJob from "./pages/ApplyJob";
-import EmployerDashboard from "./pages/EmployerDashboard";
+import EmployerDashboard from "./pages/dashboard/employer/EmployerDashboard";
+import SeekerDashboard from "./pages/dashboard/seeker/SeekerDashboard";
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import SeekerDashboard from "./pages/SeekerDashboard";
 import Signup from "./pages/Signup";
 
 import SeekerApplications from "./pages/dashboard/seeker/SeekerApplications";

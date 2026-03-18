@@ -1,20 +1,16 @@
 // src/pages/dashboard/seeker/SeekerDashboard.jsx
+import {
+  Bookmark,
+  Briefcase,
+  DollarSign,
+  MapPin,
+  TrendingUp,
+  User,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Briefcase,
-  FileText,
-  User,
-  TrendingUp,
-  Clock,
-  MapPin,
-  DollarSign,
-  Award,
-  Bookmark,
-} from "lucide-react";
-import { toast } from "sonner";
-import DashboardLayout from "../components/layout/DashboardLayout";
-import api from "../utils/api";
+import DashboardLayout from "../../../components/layout/DashboardLayout";
+import api from "../../../utils/api";
 
 // Mock user data (will be replaced with auth)
 const mockUser = {
@@ -55,7 +51,7 @@ const SeekerDashboard = () => {
       icon: Briefcase,
     },
     {
-      label: "Saved Jobs",
+      label: "Apply Jobs",
       href: "/dashboard/seeker/saved-jobs",
       icon: Bookmark,
     },
