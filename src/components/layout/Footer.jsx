@@ -9,6 +9,17 @@ const Footer = () => {
     window.scrollTo(0, 0);
   };
 
+  const handleScroll = (id) => {
+    navigate("/");
+
+    setTimeout(() => {
+      const section = document.getElementById(id);
+      if (section) {
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
+  };
+
   return (
     <footer className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 py-12">
       <div className="max-w-7xl mx-auto px-4">
@@ -53,7 +64,7 @@ const Footer = () => {
               </li>
               <li>
                 <button
-                  onClick={() => handleNavigation("/")}
+                  onClick={() => handleScroll("about")}
                   className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">
                   AI Matching
                 </button>
@@ -68,21 +79,21 @@ const Footer = () => {
             <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
               <li>
                 <button
-                  onClick={() => handleNavigation("/")}
+                  onClick={() => handleScroll("about")}
                   className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">
                   About
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => handleNavigation("/")}
+                  onClick={() => handleScroll("blog")}
                   className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">
                   Blog
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => handleNavigation("/")}
+                  onClick={() => handleScroll("careers")}
                   className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">
                   Careers
                 </button>
@@ -97,21 +108,21 @@ const Footer = () => {
             <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
               <li>
                 <button
-                  onClick={() => handleNavigation("/")}
+                  onClick={() => handleScroll("privacy")}
                   className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">
                   Privacy
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => handleNavigation("/")}
+                  onClick={() => handleScroll("terms")}
                   className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">
                   Terms
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => handleNavigation("/")}
+                  onClick={() => handleScroll("contact")}
                   className="hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer">
                   Contact
                 </button>
