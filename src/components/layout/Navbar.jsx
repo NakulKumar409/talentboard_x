@@ -118,9 +118,15 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* MOBILE MENU BUTTON */}
-        <button className="md:hidden" onClick={() => setOpen(!open)}>
-          {open ? <X size={24} /> : <Menu size={24} />}
+        {/* MOBILE MENU BUTTON - UPDATED WITH BLUE COLOR */}
+        <button
+          className="md:hidden text-blue-600 hover:text-blue-700 transition-colors duration-200"
+          onClick={() => setOpen(!open)}>
+          {open ? (
+            <X size={24} className="text-blue-600" />
+          ) : (
+            <Menu size={24} className="text-blue-600" />
+          )}
         </button>
       </div>
 

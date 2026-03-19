@@ -1,48 +1,40 @@
 // src/pages/Index.jsx
-import { useNavigate } from "react-router-dom";
 import {
-  Briefcase,
-  Users,
-  Brain,
-  TrendingUp,
-  ChevronRight,
-  Calendar,
-  Shield,
-  FileText,
-  Mail,
-  Phone,
-  MapPin,
-  Award,
-  Target,
-  Heart,
   BookOpen,
-  Clock,
-  CheckCircle,
-  Lock,
-  Eye,
-  Database,
-  Server,
-  Globe,
-  Send,
-  MessageSquare,
-  User,
-  PenTool,
-  Code,
-  Zap,
-  Rocket,
-  Github,
-  Twitter,
-  Linkedin,
-  DollarSign,
+  Brain,
+  Briefcase,
   Building,
-  GraduationCap,
-  Laptop,
-  Coffee,
-  Cpu,
-  Network,
-  Sparkles,
+  Calendar,
+  ChevronRight,
+  Clock,
+  Code,
+  Database,
+  DollarSign,
+  Eye,
+  FileText,
+  Github,
+  Heart,
+  Linkedin,
+  Lock,
+  Mail,
+  MapPin,
+  MessageSquare,
+  PenTool,
+  Phone,
+  Rocket,
+  Send,
+  Server,
+  Shield,
+  Target,
+  TrendingUp,
+  Twitter,
+  Users,
+  X,
+  Zap,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import api from "../utils/api";
 
 // Image URLs (professional images from Unsplash)
@@ -70,6 +62,7 @@ const images = {
     "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?ixlib=rb-4.0.3&auto=format&fit=crop&w=1212&q=80",
   contact:
     "https://images.unsplash.com/photo-1423666639041-f56000c27a9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1174&q=80",
+  map: "https://images.unsplash.com/photo-1569336415962-a4bd9f69c07b?auto=format&fit=crop&w=1331&q=80",
 };
 
 const Index = () => {
@@ -78,6 +71,8 @@ const Index = () => {
   const [subscribeMsg, setSubscribeMsg] = useState("");
   const [recentJobs, setRecentJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
+  const [showArticleModal, setShowArticleModal] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState(null);
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -86,13 +81,194 @@ const Index = () => {
 
   const handleScroll = (id) => {
     navigate("/");
-
     setTimeout(() => {
       const section = document.getElementById(id);
       if (section) {
         section.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }, 100);
+  };
+
+  // Article data with short content (8-10 sentences each)
+  const articles = {
+    featured: {
+      id: "clean-architecture",
+      title:
+        "The Hidden Cost of Bad Code: Why Clean Architecture Matters in 2024",
+      category: "TECH",
+      author: "Moin Khan",
+      authorImg:
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80",
+      readTime: "8 min read",
+      date: "March 15, 2024",
+      image: images.blog1,
+      content: `
+        <div class="space-y-4">
+          <p class="text-gray-700 dark:text-gray-300">Bad code creates technical debt that slows down development. Many companies focus on shipping fast but ignore code quality.</p>
+          <p class="text-gray-700 dark:text-gray-300">Clean Architecture organizes code into layers with business logic at the center. This makes applications easier to maintain and test.</p>
+          <p class="text-gray-700 dark:text-gray-300">The real cost of bad code includes slower development, more bugs, and difficult onboarding for new developers.</p>
+          <p class="text-gray-700 dark:text-gray-300">With Clean Architecture, you can swap databases or frameworks without touching core logic. This gives you incredible flexibility.</p>
+          <p class="text-gray-700 dark:text-gray-300">Testability improves dramatically because business logic can be tested independently of external concerns.</p>
+          <p class="text-gray-700 dark:text-gray-300">Common pitfalls include over-engineering and ignoring the domain layer. Keep it simple but structured.</p>
+          <p class="text-gray-700 dark:text-gray-300">Start with Clean Architecture early in your project. Add complexity only when you actually need it.</p>
+          <p class="text-gray-700 dark:text-gray-300">Remember: "The only way to go fast is to go well." - Uncle Bob Martin.</p>
+        </div>
+      `,
+    },
+    article1: {
+      id: "ai-fresher-2026",
+      title:
+        "The 2026 IT Fresher Reality: How Agentic AI Killed Mass Hiring and Created the 'AI Orchestrator'",
+      category: "Career Advice",
+      subCategory: "Technology",
+      author: "Admin",
+      authorImg:
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80",
+      date: "March 10, 2024",
+      readTime: "10 min read",
+      image: images.blog2,
+      content: `
+        <div class="space-y-4">
+          <p class="text-gray-700 dark:text-gray-300">The IT industry is changing fast. Companies are no longer hiring hundreds of junior developers for basic coding tasks.</p>
+          <p class="text-gray-700 dark:text-gray-300">Agentic AI can now plan, execute, and optimize tasks independently. It's revolutionizing how software is built.</p>
+          <p class="text-gray-700 dark:text-gray-300">By 2026, about 70% of coding tasks will be assisted or automated by AI. This changes everything for freshers.</p>
+          <p class="text-gray-700 dark:text-gray-300">Mass hiring is declining. A project that needed 10 juniors in 2024 might need only 3 "AI Orchestrators" in 2026.</p>
+          <p class="text-gray-700 dark:text-gray-300">AI Orchestrators combine deep architecture knowledge with prompt engineering skills. They guide AI agents effectively.</p>
+          <p class="text-gray-700 dark:text-gray-300">To become an AI Orchestrator, master fundamentals, learn prompt engineering, and understand system design.</p>
+          <p class="text-gray-700 dark:text-gray-300">Demand for AI-literate engineers is skyrocketing. Companies pay premium salaries for these skills.</p>
+          <p class="text-gray-700 dark:text-gray-300">The future belongs to those who can guide AI to code better, not just those who can code themselves.</p>
+        </div>
+      `,
+    },
+    article2: {
+      id: "microservices-nodejs",
+      title: "Building Scalable Microservices with Node.js and Docker",
+      category: "Backend",
+      subCategory: "Architecture",
+      author: "Sarah Chen",
+      authorImg:
+        "https://images.unsplash.com/photo-1500648767791-00dcc994a37e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80",
+      date: "March 5, 2024",
+      readTime: "12 min read",
+      image: images.blog3,
+      content: `
+        <div class="space-y-4">
+          <p class="text-gray-700 dark:text-gray-300">Monolithic applications become hard to maintain as they grow. Microservices offer a better way to scale.</p>
+          <p class="text-gray-700 dark:text-gray-300">Each microservice handles one specific business capability and can be developed independently.</p>
+          <p class="text-gray-700 dark:text-gray-300">Node.js is perfect for microservices due to its lightweight, event-driven architecture and rich ecosystem.</p>
+          <p class="text-gray-700 dark:text-gray-300">Docker packages each service with its dependencies, ensuring consistency across all environments.</p>
+          <p class="text-gray-700 dark:text-gray-300">With Docker, you can isolate services and scale them independently based on demand.</p>
+          <p class="text-gray-700 dark:text-gray-300">Use docker-compose to run multiple services together during development. It simplifies the workflow.</p>
+          <p class="text-gray-700 dark:text-gray-300">Service discovery tools like Consul help services find each other dynamically in production.</p>
+          <p class="text-gray-700 dark:text-gray-300">Start with 2-3 services, use Docker for consistency, and add service discovery when you have 5+ services.</p>
+        </div>
+      `,
+    },
+  };
+
+  // Article Modal Component
+  const ArticleModal = ({ article, onClose }) => {
+    if (!article) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="sticky top-4 right-4 float-right z-10 p-2 bg-white dark:bg-gray-700 rounded-full shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition ml-auto">
+            <X className="h-5 w-5" />
+          </button>
+
+          {/* Article Header Image */}
+          <div className="h-64 md:h-96 w-full">
+            <img
+              src={article.image}
+              alt={article.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Article Content */}
+          <div className="p-6 md:p-10">
+            {/* Category Tags */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-semibold">
+                {article.category}
+              </span>
+              {article.subCategory && (
+                <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full text-sm font-semibold">
+                  {article.subCategory}
+                </span>
+              )}
+            </div>
+
+            {/* Title */}
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              {article.title}
+            </h1>
+
+            {/* Author Info */}
+            <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+              <img
+                src={article.authorImg}
+                alt={article.author}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+              <div>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {article.author}
+                </p>
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Calendar className="h-3 w-3" />
+                  <span>{article.date}</span>
+                  <span>•</span>
+                  <BookOpen className="h-3 w-3" />
+                  <span>{article.readTime || "5 min read"}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Article Body - Short content only */}
+            <div
+              className="prose dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: article.content }}
+            />
+
+            {/* Share and Actions */}
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-4 justify-between items-center">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => toast.success("Thanks for liking!")}
+                  className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 transition">
+                  👍 Like
+                </button>
+                <button
+                  onClick={() => toast.info("Comments coming soon!")}
+                  className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 transition">
+                  💬 Comment
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success("Link copied!");
+                  }}
+                  className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 transition">
+                  🔗 Share
+                </button>
+                <button
+                  onClick={onClose}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Fetch recent jobs for Careers section
@@ -119,6 +295,7 @@ const Index = () => {
       }
     } catch (error) {
       console.error("Failed to fetch recent jobs:", error);
+      toast.error("Failed to load jobs");
     } finally {
       setLoadingJobs(false);
     }
@@ -127,21 +304,38 @@ const Index = () => {
   const handleSubscribe = (e) => {
     e.preventDefault();
     if (email) {
+      toast.success("✅ Thanks for subscribing!", {
+        description: "Check your inbox for updates.",
+      });
       setSubscribeMsg("Thanks for subscribing! Check your inbox.");
       setEmail("");
       setTimeout(() => setSubscribeMsg(""), 3000);
     }
   };
 
+  const handleApplyJob = (jobId, jobTitle) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.warning("🔒 Please login to apply", {
+        description: "You need to be logged in to apply for jobs.",
+        action: {
+          label: "Login",
+          onClick: () => navigate("/signup"),
+        },
+      });
+    } else {
+      navigate(`/apply/${jobId}`);
+    }
+  };
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
       <section
         className="relative py-20 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.7)), url(${images.office})`,
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url(${images.office})`,
         }}>
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-black/40"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
             Find Your Dream Job with
@@ -258,7 +452,7 @@ const Index = () => {
               alt="About JASIQ Labs"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0  flex items-center justify-center">
               <div className="text-center text-white">
                 <h2 className="text-3xl md:text-5xl font-bold mb-4">
                   About JASIQ Labs
@@ -312,30 +506,30 @@ const Index = () => {
                   name: "Alex Chen",
                   role: "CEO & Founder",
                   desc: "15+ years in tech leadership, ex-Google",
+                  img: "1507003211169-0a1dd7228f2d",
                 },
                 {
                   name: "Sarah Johnson",
                   role: "CTO",
                   desc: "AI/ML expert, previously led engineering at OpenAI",
+                  img: "1494790108377-be9c29b29330",
                 },
                 {
                   name: "Michael Rodriguez",
                   role: "Head of Product",
                   desc: "Product strategist with 10+ years experience",
+                  img: "1506794778202-cad84cf45f1d",
                 },
               ].map((leader, i) => (
                 <div
                   key={i}
-                  className="bg-white dark:bg-gray-900 rounded-xl p-6 text-center shadow-sm hover:shadow-md transition">
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden">
+                  className="bg-white dark:bg-gray-900 rounded-xl p-6 text-center shadow-sm hover:shadow-md transition cursor-pointer"
+                  onClick={() =>
+                    toast.info(`Meet ${leader.name}, ${leader.role}`)
+                  }>
+                  <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden ring-4 ring-blue-100 dark:ring-blue-900">
                     <img
-                      src={`https://images.unsplash.com/photo-${
-                        i === 0
-                          ? "1507003211169-0a1dd7228f2d"
-                          : i === 1
-                          ? "1494790108377-be9c29b29330"
-                          : "1500648767791-00dcc994a37e"
-                      }?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80`}
+                      src={`https://images.unsplash.com/photo-${leader.img}?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80`}
                       alt={leader.name}
                       className="w-full h-full object-cover"
                     />
@@ -356,7 +550,13 @@ const Index = () => {
 
           {/* Vision & Mission with Images */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-            <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm">
+            <div
+              className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer"
+              onClick={() =>
+                toast.info(
+                  "Our Mission: Building meaningful outcomes through learning and engineering."
+                )
+              }>
               <img
                 src={images.mission}
                 alt="Our Mission"
@@ -374,7 +574,13 @@ const Index = () => {
                 </p>
               </div>
             </div>
-            <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm">
+            <div
+              className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer"
+              onClick={() =>
+                toast.info(
+                  "Our Vision: Leading force in technological innovation."
+                )
+              }>
               <img
                 src={images.team}
                 alt="Our Vision"
@@ -396,22 +602,26 @@ const Index = () => {
           </div>
 
           {/* Company Story */}
-          <div className="mb-16 relative h-96 rounded-2xl overflow-hidden">
+          <div className="mb-16 relative h-96 rounded-2xl overflow-hidden group">
             <img
               src={images.office}
               alt="Company Story"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
-            <div className="absolute inset-0  flex items-center">
-              <div className="max-w-2xl mx-auto text-center text-black px-4">
-                <h3 className="text-3xl font-bold mb-4">Our Journey</h3>
-                <p className="text-lg mb-4">
+            <div className="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-purple-900/70 to-transparent"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="max-w-2xl mx-auto text-center text-white px-4">
+                <Rocket className="h-12 w-12 mx-auto mb-4 text-white/80" />
+                <h3 className="text-3xl font-bold mb-4 drop-shadow-lg">
+                  Our Journey
+                </h3>
+                <p className="text-lg mb-4 drop-shadow">
                   JASIQ Labs was built with one simple goal: create a
                   trustworthy and practical path for students, and deliver
                   reliable software for businesses. We focus on clarity,
                   process, and real results.
                 </p>
-                <p className="text-lg">
+                <p className="text-lg drop-shadow">
                   From our humble beginnings to becoming a trusted technology
                   partner, we've remained committed to delivering exceptional
                   value while fostering a culture of integrity and innovation.
@@ -456,7 +666,8 @@ const Index = () => {
                 return (
                   <div
                     key={i}
-                    className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm hover:shadow-md transition">
+                    className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer"
+                    onClick={() => toast.info(item.title)}>
                     <Icon className={`h-8 w-8 text-${item.color}-600 mb-3`} />
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
                       {item.title}
@@ -506,7 +717,8 @@ const Index = () => {
                 return (
                   <div
                     key={i}
-                    className="text-center p-6 bg-white dark:bg-gray-900 rounded-xl shadow-sm">
+                    className="text-center p-6 bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer"
+                    onClick={() => toast.info(`Value: ${item.title}`)}>
                     <Icon
                       className={`h-10 w-10 text-${item.color}-500 mx-auto mb-3`}
                     />
@@ -592,7 +804,12 @@ const Index = () => {
                       <p className="text-sm text-gray-500">5 min read</p>
                     </div>
                   </div>
-                  <button className="text-blue-600 font-medium flex items-center gap-1 hover:gap-2 transition-all">
+                  <button
+                    onClick={() => {
+                      setSelectedArticle(articles.featured);
+                      setShowArticleModal(true);
+                    }}
+                    className="text-blue-600 font-medium flex items-center gap-1 hover:gap-2 transition-all">
                     Read Article <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -675,7 +892,12 @@ const Index = () => {
                       />
                       <span className="text-sm font-medium">Admin</span>
                     </div>
-                    <button className="text-blue-600 text-sm font-medium flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        setSelectedArticle(articles.article1);
+                        setShowArticleModal(true);
+                      }}
+                      className="text-blue-600 text-sm font-medium flex items-center gap-1 hover:gap-2 transition">
                       Read More <ChevronRight className="h-3 w-3" />
                     </button>
                   </div>
@@ -709,13 +931,18 @@ const Index = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <img
-                        src="https://images.unsplash.com/photo-1500648767791-00dcc994a37e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
+                        src="https://randomuser.me/api/portraits/women/44.jpg"
                         alt="Sarah Chen"
                         className="w-8 h-8 rounded-full object-cover"
                       />
                       <span className="text-sm font-medium">Sarah Chen</span>
                     </div>
-                    <button className="text-blue-600 text-sm font-medium flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        setSelectedArticle(articles.article2);
+                        setShowArticleModal(true);
+                      }}
+                      className="text-blue-600 text-sm font-medium flex items-center gap-1 hover:gap-2 transition">
                       Read More <ChevronRight className="h-3 w-3" />
                     </button>
                   </div>
@@ -863,14 +1090,7 @@ const Index = () => {
                       </div>
 
                       <button
-                        onClick={() => {
-                          const token = localStorage.getItem("token");
-                          if (!token) {
-                            navigate("/signup");
-                          } else {
-                            navigate(`/apply/${job._id}`);
-                          }
-                        }}
+                        onClick={() => handleApplyJob(job._id, job.title)} // Yahan change kiya
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium flex items-center gap-1 group-hover:shadow-md">
                         Apply Now <ChevronRight className="h-3 w-3" />
                       </button>
@@ -900,7 +1120,7 @@ const Index = () => {
               alt="Privacy Policy"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0  flex items-center justify-center">
               <div className="text-center text-white">
                 <Lock className="h-12 w-12 mx-auto mb-4" />
                 <h2 className="text-3xl md:text-4xl font-bold mb-2">
@@ -913,24 +1133,28 @@ const Index = () => {
 
           {/* Privacy at a Glance */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">
-              <Shield className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <p className="text-sm font-medium">
-                We do not sell your personal data
-              </p>
-            </div>
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">
-              <Database className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <p className="text-sm font-medium">
-                We only collect info needed to provide services
-              </p>
-            </div>
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">
-              <Server className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <p className="text-sm font-medium">
-                Your data is secured with industry standards
-              </p>
-            </div>
+            {[
+              { icon: Shield, text: "We do not sell your personal data" },
+              {
+                icon: Database,
+                text: "We only collect info needed to provide services",
+              },
+              {
+                icon: Server,
+                text: "Your data is secured with industry standards",
+              },
+            ].map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={i}
+                  className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center cursor-pointer hover:shadow-md transition"
+                  onClick={() => toast.info(item.text)}>
+                  <Icon className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                  <p className="text-sm font-medium">{item.text}</p>
+                </div>
+              );
+            })}
           </div>
 
           <div className="prose dark:prose-invert max-w-none">
@@ -942,9 +1166,6 @@ const Index = () => {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               Information We Collect
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              We collect information that you provide directly to us, including:
-            </p>
             <ul className="list-disc pl-6 mb-6 text-gray-600 dark:text-gray-400">
               <li>Contact info (name, email, phone)</li>
               <li>Professional info (job title, company)</li>
@@ -966,10 +1187,6 @@ const Index = () => {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               Sharing & Disclosure
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              We do not sell, trade, or rent your personal information. We may
-              share with:
-            </p>
             <ul className="list-disc pl-6 mb-6 text-gray-600 dark:text-gray-400">
               <li>Service providers (hosting, analytics)</li>
               <li>Business partners (collaborations)</li>
@@ -994,17 +1211,14 @@ const Index = () => {
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               Depending on your location, you may have certain rights regarding
               your personal information, including the right to access, correct,
-              or delete your data. We may update this policy periodically and
-              will notify you of any changes here.
+              or delete your data.
             </p>
 
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               Privacy Concerns?
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              If you have any questions about this Privacy Policy, please
-              contact us at:
-              <br />
+              Contact us at:{" "}
               <a
                 href="mailto:privacy@jasiqlabs.com"
                 className="text-blue-600 hover:underline">
@@ -1024,7 +1238,7 @@ const Index = () => {
               alt="Terms of Service"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0  flex items-center justify-center">
               <div className="text-center text-white">
                 <FileText className="h-12 w-12 mx-auto mb-4" />
                 <h2 className="text-3xl md:text-4xl font-bold mb-2">
@@ -1050,66 +1264,41 @@ const Index = () => {
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               By accessing or using any part of the website, you agree to become
-              bound by these terms and conditions. These Terms apply to all
-              visitors, users, and others who access or use the Service.
+              bound by these terms and conditions.
             </p>
 
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               2. Intellectual Property Rights
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              The content on our website, including text, graphics, images,
-              logos, and software, is the property of JASIQ Labs and is
+              The content on our website is the property of JASIQ Labs and is
               protected by intellectual property laws.
-            </p>
-            <p className="text-sm bg-gray-100 dark:bg-gray-700 p-3 rounded mb-6 text-gray-600 dark:text-gray-400">
-              <strong>Note:</strong> You may not reproduce, distribute, or
-              create derivative works without our express written permission.
             </p>
 
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               3. User Responsibilities
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              When using our website, you explicitly agree to:
-            </p>
             <ul className="list-disc pl-6 mb-6 text-gray-600 dark:text-gray-400">
               <li>Provide accurate and complete information</li>
               <li>Maintain the confidentiality of your account credentials</li>
               <li>
                 Not use the website for any illegal or unauthorized purpose
               </li>
-              <li>Not interfere with or disrupt the website or servers</li>
-              <li>Comply with all applicable local and international laws</li>
             </ul>
 
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               4. Limitation of Liability
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               JASIQ Labs shall not be liable for any indirect, incidental,
-              special, consequential, or punitive damages, including loss of
-              profits, data, use, goodwill, or other intangible losses,
-              resulting from:
+              special, consequential, or punitive damages.
             </p>
-            <ul className="list-disc pl-6 mb-6 text-gray-600 dark:text-gray-400">
-              <li>
-                Your access to or use of or inability to access or use the
-                service.
-              </li>
-              <li>Any conduct or content of any third party on the service.</li>
-              <li>
-                Unauthorized access, use, or alteration of your transmissions or
-                content.
-              </li>
-            </ul>
 
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               Questions about Terms?
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              Contact us at:
-              <br />
+              Contact us at:{" "}
               <a
                 href="mailto:legal@jasiqlabs.com"
                 className="text-blue-600 hover:underline">
@@ -1129,7 +1318,7 @@ const Index = () => {
               alt="Contact Us"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0  flex items-center justify-center">
               <div className="text-center text-white">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">
                   Get in Touch
@@ -1144,7 +1333,12 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Form */}
             <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-8 border border-gray-200 dark:border-gray-700">
-              <form className="space-y-6">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  toast.success("Message sent! We'll get back to you soon.");
+                }}
+                className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1153,6 +1347,7 @@ const Index = () => {
                     <input
                       type="text"
                       placeholder="John"
+                      required
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -1163,6 +1358,7 @@ const Index = () => {
                     <input
                       type="text"
                       placeholder="Doe"
+                      required
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -1175,6 +1371,7 @@ const Index = () => {
                   <input
                     type="email"
                     placeholder="john@example.com"
+                    required
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1186,6 +1383,7 @@ const Index = () => {
                   <input
                     type="text"
                     placeholder="How can we help?"
+                    required
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1197,6 +1395,7 @@ const Index = () => {
                   <textarea
                     rows="5"
                     placeholder="Tell us more about your inquiry..."
+                    required
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"></textarea>
                 </div>
 
@@ -1213,50 +1412,62 @@ const Index = () => {
               <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-8 text-white mb-8">
                 <h3 className="text-2xl font-bold mb-4">Contact Information</h3>
                 <p className="text-blue-100 mb-6">
-                  Feel free to reach out through any of these channels. We're
-                  here to help!
+                  Feel free to reach out through any of these channels.
                 </p>
 
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-blue-200" />
-                    <span>support@jasiqlabs.com</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-5 w-5 text-blue-200" />
-                    <span>+1 (555) 123-4567</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <MapPin className="h-5 w-5 text-blue-200" />
-                    <span>San Francisco, CA 94105</span>
-                  </div>
+                  {[
+                    { icon: Mail, text: "support@jasiqlabs.com" },
+                    { icon: Phone, text: "+1 (555) 123-4567" },
+                    { icon: MapPin, text: "San Francisco, CA 94105" },
+                  ].map((item, i) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-center gap-3 cursor-pointer hover:bg-white/10 p-2 rounded-lg transition"
+                        onClick={() => {
+                          if (item.icon === Mail) {
+                            window.location.href = `mailto:${item.text}`;
+                          } else if (item.icon === Phone) {
+                            window.location.href = `tel:${item.text}`;
+                          } else {
+                            toast.info("Office location: San Francisco");
+                          }
+                        }}>
+                        <Icon className="h-5 w-5 text-blue-200" />
+                        <span>{item.text}</span>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="flex gap-4 mt-8">
-                  <a
-                    href="#"
-                    className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition">
-                    <Github className="h-5 w-5" />
-                  </a>
-                  <a
-                    href="#"
-                    className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition">
-                    <Twitter className="h-5 w-5" />
-                  </a>
-                  <a
-                    href="#"
-                    className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition">
-                    <Linkedin className="h-5 w-5" />
-                  </a>
+                  {[Github, Twitter, Linkedin].map((Icon, i) => (
+                    <a
+                      key={i}
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toast.info("Social media coming soon!");
+                      }}
+                      className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition">
+                      <Icon className="h-5 w-5" />
+                    </a>
+                  ))}
                 </div>
               </div>
 
               {/* Map */}
-              <div className="rounded-2xl overflow-hidden h-64">
+              <div
+                className="rounded-2xl overflow-hidden h-64 cursor-pointer"
+                onClick={() =>
+                  toast.info("📍 Office located in San Francisco")
+                }>
                 <img
-                  src="https://images.unsplash.com/photo-1569336415962-a4bd9f69c07b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1331&q=80"
+                  src={images.map}
                   alt="Office Location"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover hover:scale-105 transition duration-500"
                 />
               </div>
             </div>
@@ -1275,12 +1486,26 @@ const Index = () => {
             with JASIQ Labs
           </p>
           <button
-            onClick={() => handleNavigation("/signup")}
+            onClick={() => {
+              toast.success("Let's get started!");
+              handleNavigation("/signup");
+            }}
             className="px-8 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors text-lg font-medium shadow-lg hover:shadow-xl">
             Get Started Today
           </button>
         </div>
       </section>
+
+      {/* Article Modal */}
+      {showArticleModal && (
+        <ArticleModal
+          article={selectedArticle}
+          onClose={() => {
+            setShowArticleModal(false);
+            setSelectedArticle(null);
+          }}
+        />
+      )}
     </div>
   );
 };
