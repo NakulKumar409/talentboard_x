@@ -1301,47 +1301,53 @@ const ApplyJob = () => {
 
   // Render Page 5 (Skills & Social)
   const renderPage5 = () => (
-    <div className="space-y-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center">
+    <div className="space-y-6 sm:space-y-8">
+      {/* HEADER */}
+      <div className="flex items-center gap-3 mb-4 sm:mb-6">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center">
           <FileText className="h-5 w-5 text-pink-600 dark:text-pink-400" />
         </div>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
           Skills & Social Links
         </h2>
       </div>
 
-      <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg">
-        <label className="block text-lg font-medium text-gray-900 dark:text-white mb-4">
+      {/* SKILLS */}
+      <div className="bg-gray-50 dark:bg-gray-700/50 p-4 sm:p-6 rounded-lg">
+        <label className="block text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-4">
           Skills <span className="text-red-500">*</span>
         </label>
-        <div className="flex gap-3 mb-4">
+
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <input
             type="text"
             value={skillInput}
             onChange={(e) => setSkillInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && addSkill()}
-            className={`flex-1 px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+            className={`flex-1 px-4 py-2.5 text-sm sm:text-base border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
               errors.skills
                 ? "border-red-500 focus:ring-red-500"
                 : "border-gray-300 dark:border-gray-600 focus:ring-blue-500"
             }`}
             placeholder="Add a skill (e.g., React, Python, Project Management)"
           />
+
           <button
             type="button"
             onClick={addSkill}
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 whitespace-nowrap">
+            className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
             <Plus className="h-4 w-4" />
             Add Skill
           </button>
         </div>
+
         {errors.skills && (
           <p className="mb-4 text-xs text-red-500 flex items-center gap-1">
             <AlertCircle className="h-3 w-3" /> {errors.skills}
           </p>
         )}
-        <div className="flex flex-wrap gap-2 min-h-[60px] p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+
+        <div className="flex flex-wrap gap-2 min-h-[60px] p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-auto">
           {formData.skills.map((skill, index) => (
             <span
               key={index}
@@ -1354,6 +1360,7 @@ const ApplyJob = () => {
               </button>
             </span>
           ))}
+
           {formData.skills.length === 0 && (
             <p className="text-sm text-gray-500 dark:text-gray-400 w-full text-center py-2">
               No skills added yet. Add your technical and soft skills above.
@@ -1362,28 +1369,32 @@ const ApplyJob = () => {
         </div>
       </div>
 
-      <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg">
-        <label className="block text-lg font-medium text-gray-900 dark:text-white mb-4">
+      {/* TOP SKILLS */}
+      <div className="bg-gray-50 dark:bg-gray-700/50 p-4 sm:p-6 rounded-lg">
+        <label className="block text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-4">
           Top Skills (Optional)
         </label>
-        <div className="flex gap-3 mb-4">
+
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <input
             type="text"
             value={topSkillInput}
             onChange={(e) => setTopSkillInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && addTopSkill()}
-            className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-2.5 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
             placeholder="Add your strongest skills"
           />
+
           <button
             type="button"
             onClick={addTopSkill}
-            className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 whitespace-nowrap">
+            className="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
             <Plus className="h-4 w-4" />
             Add Top Skill
           </button>
         </div>
-        <div className="flex flex-wrap gap-2 min-h-[60px] p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+
+        <div className="flex flex-wrap gap-2 min-h-[60px] p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-auto">
           {formData.topSkills.map((skill, index) => (
             <span
               key={index}
@@ -1399,11 +1410,13 @@ const ApplyJob = () => {
         </div>
       </div>
 
-      <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+      {/* SOCIAL LINKS */}
+      <div className="bg-gray-50 dark:bg-gray-700/50 p-4 sm:p-6 rounded-lg">
+        <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-4">
           Social & Professional Links
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Github className="h-4 w-4 inline mr-2" />
@@ -1413,10 +1426,11 @@ const ApplyJob = () => {
               name="github"
               value={formData.github}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               placeholder="https://github.com/username"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Linkedin className="h-4 w-4 inline mr-2" />
@@ -1426,11 +1440,12 @@ const ApplyJob = () => {
               name="linkedin"
               value={formData.linkedin}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               placeholder="https://linkedin.com/in/username"
             />
           </div>
-          <div className="md:col-span-2">
+
+          <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Globe className="h-4 w-4 inline mr-2" />
               Personal Portfolio / Website
@@ -1439,7 +1454,7 @@ const ApplyJob = () => {
               name="portfolio"
               value={formData.portfolio}
               onChange={handleInputChange}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               placeholder="https://yourportfolio.com"
             />
           </div>
