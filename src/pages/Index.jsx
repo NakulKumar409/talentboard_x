@@ -3,7 +3,6 @@ import {
   BookOpen,
   Brain,
   Briefcase,
-  Building,
   Calendar,
   ChevronRight,
   Clock,
@@ -54,18 +53,15 @@ const images = {
   career:
     "https://images.unsplash.com/photo-1521737711867-e3b97375f902?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
   team: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1171&q=80",
-  office:
-    "https://images.unsplash.com/photo-1497215842964-222b430dc094?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
+  office: "https://source.unsplash.com/1600x900/?office",
   privacy:
     "https://images.unsplash.com/photo-1573164713988-8665fc963095?ixlib=rb-4.0.3&auto=format&fit=crop&w=1169&q=80",
-  terms:
-    "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?ixlib=rb-4.0.3&auto=format&fit=crop&w=1212&q=80",
+  terms: "https://source.unsplash.com/1200x800/?business,agreement",
   contact:
     "https://images.unsplash.com/photo-1423666639041-f56000c27a9a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1174&q=80",
-  map: "https://images.unsplash.com/photo-1569336415962-a4bd9f69c07b?auto=format&fit=crop&w=1331&q=80",
 };
 
-const Index = () => {
+function Index() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [subscribeMsg, setSubscribeMsg] = useState("");
@@ -146,8 +142,7 @@ const Index = () => {
       category: "Backend",
       subCategory: "Architecture",
       author: "Sarah Chen",
-      authorImg:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a37e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80",
+      authorImg: "https://randomuser.me/api/portraits/women/44.jpg",
       date: "March 5, 2024",
       readTime: "12 min read",
       image: images.blog3,
@@ -237,27 +232,8 @@ const Index = () => {
 
             {/* Share and Actions */}
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-4 justify-between items-center">
+              <div className="flex gap-2"></div>
               <div className="flex gap-2">
-                <button
-                  onClick={() => toast.success("Thanks for liking!")}
-                  className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 transition">
-                  👍 Like
-                </button>
-                <button
-                  onClick={() => toast.info("Comments coming soon!")}
-                  className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 transition">
-                  💬 Comment
-                </button>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    toast.success("Link copied!");
-                  }}
-                  className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 transition">
-                  🔗 Share
-                </button>
                 <button
                   onClick={onClose}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
@@ -444,25 +420,26 @@ const Index = () => {
 
       {/* ===== ABOUT SECTION (JASIQ Labs) ===== */}
       <section id="about" className="py-20 bg-gray-50 dark:bg-gray-800">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Header with Image */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* HEADER TEXT (SEPARATE) */}
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              About JASIQ Labs
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              Empowering innovation through technology, training, and
+              transformative solutions.
+            </p>
+          </div>
+
+          {/* IMAGE */}
           <div className="relative h-64 md:h-96 rounded-2xl overflow-hidden mb-12">
             <img
               src={images.about}
               alt="About JASIQ Labs"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover hover:scale-105 transition duration-500"
             />
-            <div className="absolute inset-0  flex items-center justify-center">
-              <div className="text-center text-white">
-                <h2 className="text-3xl md:text-5xl font-bold mb-4">
-                  About JASIQ Labs
-                </h2>
-                <p className="text-xl max-w-2xl mx-auto px-4">
-                  Empowering innovation through technology, training, and
-                  transformative solutions.
-                </p>
-              </div>
-            </div>
+            <div className="absolute inset-0 bg-black/20"></div>
           </div>
 
           {/* Compliance Info */}
@@ -475,13 +452,10 @@ const Index = () => {
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
                   We follow basic compliance practices for website policies,
-                  user data safety, and transparent communication. Company
-                  registration details can be added/updated via admin in later
-                  phases.
+                  user data safety, and transparent communication.
                   <span className="block mt-2 font-medium">
                     We are committed to maintaining the highest standards of
-                    ethical business practices, data protection, and regulatory
-                    compliance across all our operations.
+                    ethical business practices and data protection.
                   </span>
                 </p>
               </div>
@@ -493,51 +467,47 @@ const Index = () => {
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
               Leadership
             </h3>
+
             <p className="text-gray-600 dark:text-gray-400 text-center max-w-2xl mx-auto mb-10">
-              We are a team of builders and mentors who care about quality,
-              trust, and consistency. Our leadership team brings together
-              decades of combined experience in technology, business strategy,
-              and innovation to guide our company's vision and growth.
+              We are a team of builders and mentors focused on quality, trust,
+              and innovation.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {[
                 {
                   name: "Alex Chen",
                   role: "CEO & Founder",
-                  desc: "15+ years in tech leadership, ex-Google",
+                  desc: "15+ years in tech leadership",
                   img: "1507003211169-0a1dd7228f2d",
                 },
                 {
                   name: "Sarah Johnson",
                   role: "CTO",
-                  desc: "AI/ML expert, previously led engineering at OpenAI",
+                  desc: "AI/ML expert",
                   img: "1494790108377-be9c29b29330",
                 },
                 {
                   name: "Michael Rodriguez",
                   role: "Head of Product",
-                  desc: "Product strategist with 10+ years experience",
+                  desc: "Product strategist",
                   img: "1506794778202-cad84cf45f1d",
                 },
               ].map((leader, i) => (
                 <div
                   key={i}
-                  className="bg-white dark:bg-gray-900 rounded-xl p-6 text-center shadow-sm hover:shadow-md transition cursor-pointer"
-                  onClick={() =>
-                    toast.info(`Meet ${leader.name}, ${leader.role}`)
-                  }>
+                  className="bg-white dark:bg-gray-900 rounded-xl p-6 text-center shadow-sm hover:shadow-lg transition">
                   <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden ring-4 ring-blue-100 dark:ring-blue-900">
                     <img
-                      src={`https://images.unsplash.com/photo-${leader.img}?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80`}
+                      src={`https://images.unsplash.com/photo-${leader.img}?auto=format&fit=crop&w=200&q=80`}
                       alt={leader.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <h4 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {leader.name}
                   </h4>
-                  <p className="text-blue-600 dark:text-blue-400 mb-2">
+                  <p className="text-blue-600 dark:text-blue-400 mb-1">
                     {leader.role}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -548,210 +518,51 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Vision & Mission with Images */}
+          {/* Mission & Vision */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-            <div
-              className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer"
-              onClick={() =>
-                toast.info(
-                  "Our Mission: Building meaningful outcomes through learning and engineering."
-                )
-              }>
-              <img
-                src={images.mission}
-                alt="Our Mission"
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-8">
-                <Target className="h-10 w-10 text-blue-600 mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+            <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition">
+              <img src={images.mission} className="w-full h-48 object-cover" />
+              <div className="p-6">
+                <Target className="h-8 w-8 text-blue-600 mb-3" />
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                   Our Mission
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Our mission is to build meaningful outcomes through learning,
-                  engineering, and product thinking — with clarity, discipline,
-                  and long-term impact.
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Building meaningful outcomes through learning and engineering.
                 </p>
               </div>
             </div>
-            <div
-              className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer"
-              onClick={() =>
-                toast.info(
-                  "Our Vision: Leading force in technological innovation."
-                )
-              }>
-              <img
-                src={images.team}
-                alt="Our Vision"
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-8">
-                <Eye className="h-10 w-10 text-purple-600 mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+
+            <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition">
+              <img src={images.team} className="w-full h-48 object-cover" />
+              <div className="p-6">
+                <Eye className="h-8 w-8 text-purple-600 mb-3" />
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                   Our Vision
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  To be the leading force in technological innovation,
-                  transforming ideas into impactful solutions that drive
-                  progress and create sustainable value for our clients and
-                  communities worldwide.
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Leading innovation and creating impactful solutions globally.
                 </p>
               </div>
-            </div>
-          </div>
-
-          {/* Company Story */}
-          <div className="mb-16 relative h-96 rounded-2xl overflow-hidden group">
-            <img
-              src={images.office}
-              alt="Company Story"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-purple-900/70 to-transparent"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="max-w-2xl mx-auto text-center text-white px-4">
-                <Rocket className="h-12 w-12 mx-auto mb-4 text-white/80" />
-                <h3 className="text-3xl font-bold mb-4 drop-shadow-lg">
-                  Our Journey
-                </h3>
-                <p className="text-lg mb-4 drop-shadow">
-                  JASIQ Labs was built with one simple goal: create a
-                  trustworthy and practical path for students, and deliver
-                  reliable software for businesses. We focus on clarity,
-                  process, and real results.
-                </p>
-                <p className="text-lg drop-shadow">
-                  From our humble beginnings to becoming a trusted technology
-                  partner, we've remained committed to delivering exceptional
-                  value while fostering a culture of integrity and innovation.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* What Makes Us Different */}
-          <div className="mb-16">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">
-              What Makes Us Different
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                {
-                  icon: MessageSquare,
-                  color: "blue",
-                  title: "Clarity-first communication",
-                  desc: "We believe in transparent, honest communication at every step.",
-                },
-                {
-                  icon: PenTool,
-                  color: "purple",
-                  title: "Structured mentorship",
-                  desc: "Guided learning paths with experienced mentors.",
-                },
-                {
-                  icon: Code,
-                  color: "green",
-                  title: "Strong engineering discipline",
-                  desc: "Clean code, best practices, and scalable architecture.",
-                },
-                {
-                  icon: Zap,
-                  color: "orange",
-                  title: "Long-term outcomes focus",
-                  desc: "Building for sustainable success, not quick wins.",
-                },
-              ].map((item, i) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={i}
-                    className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer"
-                    onClick={() => toast.info(item.title)}>
-                    <Icon className={`h-8 w-8 text-${item.color}-600 mb-3`} />
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                      {item.title}
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {item.desc}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Culture & Values */}
-          <div className="mb-16">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">
-              Culture & Values
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                {
-                  icon: Heart,
-                  color: "red",
-                  title: "Honesty in communication",
-                  desc: "We believe in the power of collaboration and innovation.",
-                },
-                {
-                  icon: Target,
-                  color: "blue",
-                  title: "Discipline in execution",
-                  desc: "We believe in the power of collaboration and innovation.",
-                },
-                {
-                  icon: Users,
-                  color: "green",
-                  title: "Respect for learners & clients",
-                  desc: "We believe in the power of collaboration and innovation.",
-                },
-                {
-                  icon: Rocket,
-                  color: "purple",
-                  title: "Focus on real outcomes",
-                  desc: "We believe in the power of collaboration and innovation.",
-                },
-              ].map((item, i) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={i}
-                    className="text-center p-6 bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer"
-                    onClick={() => toast.info(`Value: ${item.title}`)}>
-                    <Icon
-                      className={`h-10 w-10 text-${item.color}-500 mx-auto mb-3`}
-                    />
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                      {item.title}
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {item.desc}
-                    </p>
-                  </div>
-                );
-              })}
             </div>
           </div>
 
           {/* CTA */}
-          <div className="text-center bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-12">
-            <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <div className="text-center bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-10">
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-3">
               Ready to start your next project?
             </h3>
-            <p className="text-blue-100 mb-6">
-              Get in touch with our team to discuss how we can help bring your
-              ideas to life.
+            <p className="text-blue-100 mb-5">
+              Let’s build something amazing together.
             </p>
             <button
               onClick={() => handleScroll("contact")}
-              className="px-8 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition font-semibold">
-              Contact Us Today
+              className="px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition">
+              Contact Us
             </button>
           </div>
         </div>
       </section>
-
       {/* ===== BLOG SECTION (JASIQ Insights) ===== */}
       <section id="blog" className="py-20 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4">
@@ -953,164 +764,100 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ===== CAREERS SECTION (with real jobs in attractive cards) ===== */}
-      <section id="careers" className="py-20 bg-gray-50 dark:bg-gray-800">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Join Our Team
-            </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Help us build the future of hiring. Check out our latest openings
-              below.
-            </p>
-          </div>
+      {/* ===== CAREERS SECTION ===== */}
+      <section className="py-10 sm:py-14 bg-[#020617]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* GRID */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            {recentJobs.map((job) => (
+              <div
+                key={job._id}
+                className="group bg-gradient-to-br from-[#0f172a] to-[#1e293b] border border-blue-900/30 rounded-2xl p-5 sm:p-6 flex flex-col justify-between shadow-md hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1">
+                {/* HEADER */}
+                <div className="mb-4">
+                  <h3 className="text-lg sm:text-xl font-semibold text-white leading-snug line-clamp-2 group-hover:text-blue-400 transition">
+                    {job.title || "Frontend Developer"}
+                  </h3>
+                  <p className="text-sm text-gray-400 mt-1">
+                    {job.company || "Company Name"}
+                  </p>
+                </div>
 
-          {loadingJobs ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
-              <p className="text-gray-500 mt-4">Loading latest jobs...</p>
-            </div>
-          ) : recentJobs.length === 0 ? (
-            <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-2xl">
-              <Briefcase className="h-12 w-12 mx-auto text-gray-400 mb-3" />
-              <p className="text-gray-600 dark:text-gray-400">
-                No jobs available at the moment
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentJobs.map((job) => (
-                <div
-                  key={job._id}
-                  className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 group">
-                  {/* Company Header with Gradient */}
-                  <div className="h-32 bg-gradient-to-r from-blue-600 to-purple-600 relative">
-                    <div className="absolute -bottom-8 left-6">
-                      <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-xl shadow-lg flex items-center justify-center border-4 border-white dark:border-gray-800">
-                        {job.companyLogo ? (
-                          <img
-                            src={job.companyLogo}
-                            alt={job.company}
-                            className="w-10 h-10 object-contain"
-                          />
-                        ) : (
-                          <Building className="h-8 w-8 text-blue-600" />
-                        )}
-                      </div>
-                    </div>
+                {/* DESCRIPTION */}
+                {job.description && (
+                  <p className="text-sm text-gray-300 mb-4 line-clamp-3 leading-relaxed">
+                    {job.description}
+                  </p>
+                )}
 
-                    {/* Job Type Badge */}
-                    <div className="absolute top-4 right-4">
-                      <span className="px-3 py-1 bg-white/20 backdrop-blur-sm text-white text-sm rounded-full border border-white/30">
-                        {job.type || "Full-time"}
-                      </span>
-                    </div>
+                {/* INFO */}
+                <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm mb-4">
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <MapPin className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                    <span className="truncate">{job.location || "Remote"}</span>
                   </div>
 
-                  {/* Content */}
-                  <div className="pt-10 p-6">
-                    <div className="mb-4">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 transition">
-                        {job.title || job.profile}
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400 font-medium">
-                        {job.company}
-                      </p>
-                    </div>
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <DollarSign className="h-4 w-4 text-green-400 flex-shrink-0" />
+                    <span className="truncate">
+                      {job.salary || "Negotiable"}
+                    </span>
+                  </div>
 
-                    {/* Description */}
-                    {job.description && (
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
-                        {job.description}
-                      </p>
-                    )}
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <Briefcase className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                    <span>{job.type || "Full-time"}</span>
+                  </div>
 
-                    {/* Details Grid */}
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                      <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                        <MapPin className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                        <span className="truncate">
-                          {job.location || "Remote"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                        <DollarSign className="h-4 w-4 text-green-500 flex-shrink-0" />
-                        <span className="truncate">
-                          {job.salary || "Negotiable"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                        <Briefcase className="h-4 w-4 text-purple-500 flex-shrink-0" />
-                        <span className="truncate">
-                          {job.type || "Full-time"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                        <Clock className="h-4 w-4 text-orange-500 flex-shrink-0" />
-                        <span className="truncate">
-                          {job.experienceRequired || "Fresher"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Skills */}
-                    {job.skillsRequired && job.skillsRequired.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {job.skillsRequired.slice(0, 4).map((skill, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
-                            {skill}
-                          </span>
-                        ))}
-                        {job.skillsRequired.length > 4 && (
-                          <span className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
-                            +{job.skillsRequired.length - 4}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Posted Date & Apply Button */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <Calendar className="h-3 w-3" />
-                        <span>
-                          {job.createdAt
-                            ? new Date(job.createdAt).toLocaleDateString(
-                                "en-US",
-                                {
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )
-                            : "Recently"}
-                        </span>
-                      </div>
-
-                      <button
-                        onClick={() => handleApplyJob(job._id, job.title)} // Yahan change kiya
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium flex items-center gap-1 group-hover:shadow-md">
-                        Apply Now <ChevronRight className="h-3 w-3" />
-                      </button>
-                    </div>
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <Clock className="h-4 w-4 text-orange-400 flex-shrink-0" />
+                    <span>{job.experienceRequired || "Fresher"}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
 
-          <div className="text-center mt-8">
-            <button
-              onClick={() => handleNavigation("/jobs")}
-              className="px-6 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition font-medium inline-flex items-center gap-2">
-              View All Jobs <ChevronRight className="h-4 w-4" />
-            </button>
+                {/* SKILLS */}
+                {job.skillsRequired?.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {job.skillsRequired.slice(0, 3).map((skill, i) => (
+                      <span
+                        key={i}
+                        className="px-3 py-1 text-xs bg-blue-900/30 text-blue-300 rounded-full border border-blue-800/40">
+                        {skill}
+                      </span>
+                    ))}
+
+                    {job.skillsRequired.length > 3 && (
+                      <span className="px-3 py-1 text-xs bg-gray-700 text-gray-300 rounded-full">
+                        +{job.skillsRequired.length - 3}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* FOOTER */}
+                <div className="flex items-center justify-between pt-4 border-t border-blue-900/30 mt-auto">
+                  <span className="text-xs text-gray-400 flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {job.createdAt
+                      ? new Date(job.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "Recently"}
+                  </span>
+
+                  <button
+                    onClick={() => handleApplyJob(job)}
+                    className="px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg flex items-center gap-1 hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-blue-500/20">
+                    Apply Now
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
-
       {/* ===== PRIVACY POLICY SECTION ===== */}
       <section id="privacy" className="py-20 bg-white dark:bg-gray-900">
         <div className="max-w-4xl mx-auto px-4">
@@ -1233,11 +980,6 @@ const Index = () => {
       <section id="terms" className="py-20 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-4xl mx-auto px-4">
           <div className="relative h-64 rounded-2xl overflow-hidden mb-12">
-            <img
-              src={images.terms}
-              alt="Terms of Service"
-              className="w-full h-full object-cover"
-            />
             <div className="absolute inset-0  flex items-center justify-center">
               <div className="text-center text-white">
                 <FileText className="h-12 w-12 mx-auto mb-4" />
@@ -1330,169 +1072,120 @@ const Index = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Contact Form */}
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-8 border border-gray-200 dark:border-gray-700">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            {/* LEFT: CONTACT FORM */}
+            <div className="bg-gradient-to-br from-[#0f172a] to-[#1e293b] rounded-2xl p-6 sm:p-8 border border-blue-900/30 shadow-xl flex flex-col h-full">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   toast.success("Message sent! We'll get back to you soon.");
                 }}
-                className="space-y-6">
+                className="space-y-5 flex-1">
+                {/* NAME */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      First Name
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="John"
-                      required
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Last Name
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Doe"
-                      required
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="john@example.com"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Subject
-                  </label>
                   <input
                     type="text"
-                    placeholder="How can we help?"
+                    placeholder="First Name"
                     required
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 text-sm sm:text-base rounded-xl bg-[#1e293b] border border-blue-800/40 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Last Name"
+                    required
+                    className="w-full px-4 py-3 text-sm sm:text-base rounded-xl bg-[#1e293b] border border-blue-800/40 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Message
-                  </label>
-                  <textarea
-                    rows="5"
-                    placeholder="Tell us more about your inquiry..."
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"></textarea>
-                </div>
+                {/* EMAIL */}
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  required
+                  className="w-full px-4 py-3 text-sm sm:text-base rounded-xl bg-[#1e293b] border border-blue-800/40 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                />
 
+                {/* SUBJECT */}
+                <input
+                  type="text"
+                  placeholder="Subject"
+                  required
+                  className="w-full px-4 py-3 text-sm sm:text-base rounded-xl bg-[#1e293b] border border-blue-800/40 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                />
+
+                {/* MESSAGE */}
+                <textarea
+                  rows="4"
+                  placeholder="Your message..."
+                  required
+                  className="w-full px-4 py-3 text-sm sm:text-base rounded-xl bg-[#1e293b] border border-blue-800/40 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none"
+                />
+
+                {/* BUTTON */}
                 <button
                   type="submit"
-                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition font-medium flex items-center justify-center gap-2">
-                  Send Message <Send className="h-4 w-4" />
+                  className="w-full mt-auto px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-medium flex items-center justify-center gap-2 hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/20">
+                  Send Message
+                  <Send className="h-4 w-4" />
                 </button>
               </form>
             </div>
+            {/* RIGHT: CONTACT INFO */}
+            <div className="flex flex-col gap-6 h-full">
+              {/* INFO CARD */}
+              <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-6 text-white flex-1">
+                <h3 className="text-xl font-semibold mb-4">Contact Info</h3>
 
-            {/* Contact Info */}
-            <div>
-              <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-8 text-white mb-8">
-                <h3 className="text-2xl font-bold mb-4">Contact Information</h3>
-                <p className="text-blue-100 mb-6">
-                  Feel free to reach out through any of these channels.
-                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* EMAIL */}
+                  <div
+                    onClick={() =>
+                      (window.location.href = "mailto:support@jasiqlabs.com")
+                    }
+                    className="flex items-center gap-3 bg-white/10 p-3 rounded-lg cursor-pointer hover:bg-white/20 transition">
+                    <Mail className="h-5 w-5" />
+                    <span className="text-sm">support@jasiqlabs.com</span>
+                  </div>
 
-                <div className="space-y-4">
-                  {[
-                    { icon: Mail, text: "support@jasiqlabs.com" },
-                    { icon: Phone, text: "+1 (555) 123-4567" },
-                    { icon: MapPin, text: "San Francisco, CA 94105" },
-                  ].map((item, i) => {
-                    const Icon = item.icon;
-                    return (
-                      <div
-                        key={i}
-                        className="flex items-center gap-3 cursor-pointer hover:bg-white/10 p-2 rounded-lg transition"
-                        onClick={() => {
-                          if (item.icon === Mail) {
-                            window.location.href = `mailto:${item.text}`;
-                          } else if (item.icon === Phone) {
-                            window.location.href = `tel:${item.text}`;
-                          } else {
-                            toast.info("Office location: San Francisco");
-                          }
-                        }}>
-                        <Icon className="h-5 w-5 text-blue-200" />
-                        <span>{item.text}</span>
-                      </div>
-                    );
-                  })}
+                  {/* PHONE */}
+                  <div
+                    onClick={() => (window.location.href = "tel:+15551234567")}
+                    className="flex items-center gap-3 bg-white/10 p-3 rounded-lg cursor-pointer hover:bg-white/20 transition">
+                    <Phone className="h-5 w-5" />
+                    <span className="text-sm">+1 555 123 4567</span>
+                  </div>
+
+                  {/* LOCATION */}
+                  <div
+                    onClick={() => toast.info("San Francisco Office")}
+                    className="flex items-center gap-3 bg-white/10 p-3 rounded-lg cursor-pointer hover:bg-white/20 transition sm:col-span-2">
+                    <MapPin className="h-5 w-5" />
+                    <span className="text-sm">San Francisco, CA</span>
+                  </div>
                 </div>
 
-                <div className="flex gap-4 mt-8">
-                  {[Github, Twitter, Linkedin].map((Icon, i) => (
-                    <a
+                {/* SOCIAL */}
+                <div className="flex gap-3 mt-6">
+                  {[Github, Linkedin, Twitter].map((Icon, i) => (
+                    <div
                       key={i}
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        toast.info("Social media coming soon!");
-                      }}
-                      className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition">
-                      <Icon className="h-5 w-5" />
-                    </a>
+                      className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 cursor-pointer">
+                      <Icon className="h-4 w-4" />
+                    </div>
                   ))}
                 </div>
               </div>
 
-              {/* Map */}
-              <div
-                className="rounded-2xl overflow-hidden h-64 cursor-pointer"
-                onClick={() =>
-                  toast.info("📍 Office located in San Francisco")
-                }>
-                <img
-                  src={images.map}
-                  alt="Office Location"
-                  className="w-full h-full object-cover hover:scale-105 transition duration-500"
-                />
+              {/* MAP */}
+              <div className="rounded-2xl overflow-hidden h-[200px]">
+                <iframe
+                  src="https://www.google.com/maps?q=San Francisco&output=embed"
+                  className="w-full h-full border-0"
+                  loading="lazy"></iframe>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
-        <div className="max-w-4xl mx-auto text-center px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Ready to Find Your Dream Job?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Join thousands of professionals who've found their perfect match
-            with JASIQ Labs
-          </p>
-          <button
-            onClick={() => {
-              toast.success("Let's get started!");
-              handleNavigation("/signup");
-            }}
-            className="px-8 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors text-lg font-medium shadow-lg hover:shadow-xl">
-            Get Started Today
-          </button>
         </div>
       </section>
 
@@ -1508,6 +1201,6 @@ const Index = () => {
       )}
     </div>
   );
-};
+}
 
 export default Index;
