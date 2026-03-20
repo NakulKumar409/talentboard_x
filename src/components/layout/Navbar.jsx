@@ -65,7 +65,7 @@ const Navbar = () => {
         {/* DESKTOP MENU */}
         <div className="hidden md:flex items-center gap-6">
           {[
-            { label: "Find Jobs", action: () => handleNavigation("/jobs") },
+            // { label: "Find Jobs", action: () => handleNavigation("/jobs") },
             { label: "About", action: () => handleScroll("about") },
             { label: "Blog", action: () => handleScroll("blog") },
             { label: "Careers", action: () => handleScroll("careers") },
