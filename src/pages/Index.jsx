@@ -879,7 +879,7 @@ function Index() {
           </div>
 
           {/* Privacy at a Glance */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-12">
             {[
               { icon: Shield, text: "We do not sell your personal data" },
               {
@@ -895,15 +895,31 @@ function Index() {
               return (
                 <div
                   key={i}
-                  className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center cursor-pointer hover:shadow-md transition"
-                  onClick={() => toast.info(item.text)}>
-                  <Icon className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <p className="text-sm font-medium">{item.text}</p>
+                  onClick={() => toast.info(item.text)}
+                  className="group bg-white dark:bg-gray-900 border border-blue-100 dark:border-blue-800 
+        rounded-2xl p-6 text-center cursor-pointer 
+        shadow-sm hover:shadow-xl 
+        transform hover:-translate-y-2 
+        transition-all duration-300 ease-in-out">
+                  {/* Icon Circle */}
+                  <div
+                    className="w-14 h-14 flex items-center justify-center 
+        rounded-full bg-blue-100 dark:bg-blue-800/30 
+        mx-auto mb-4 group-hover:scale-110 transition">
+                    <Icon className="h-7 w-7 text-blue-600" />
+                  </div>
+
+                  {/* Text */}
+                  <p className="text-base md:text-lg font-semibold text-blue-700 dark:text-blue-400 leading-relaxed">
+                    {item.text}
+                  </p>
+
+                  {/* Bottom underline effect */}
+                  <div className="w-0 group-hover:w-12 h-1 bg-blue-500 mx-auto mt-3 transition-all duration-300 rounded-full"></div>
                 </div>
               );
             })}
           </div>
-
           <div className="prose dark:prose-invert max-w-none">
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               This Privacy Policy explains how JASIQ Labs ("we," "our," or "us")
