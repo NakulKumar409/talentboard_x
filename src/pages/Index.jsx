@@ -765,7 +765,8 @@ function Index() {
       </section>
 
       {/* ===== CAREERS SECTION ===== */}
-      <section className="py-10 sm:py-14 bg-[#020617]">
+      {/* FIXED: Added id="careers" to enable scrolling from navbar */}
+      <section id="careers" className="py-10 sm:py-14 bg-[#020617]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* GRID */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
