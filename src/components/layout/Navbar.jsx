@@ -18,8 +18,7 @@ const Navbar = () => {
       } else {
         setUser(null);
       }
-    } catch (error) {
-      console.error("Invalid user data in localStorage");
+    } catch {
       setUser(null);
     }
   }, [location]);
@@ -37,7 +36,7 @@ const Navbar = () => {
     setTimeout(() => {
       const section = document.getElementById(id);
       if (section) {
-        section.scrollIntoView({ behavior: "smooth", block: "start" });
+        section.scrollIntoView({ behavior: "smooth" });
       }
     }, 100);
   };
@@ -50,9 +49,10 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800">
-      <div className="w-full flex h-16 items-center justify-between px-6">
-        {/* LEFT LOGO */}
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/90 backdrop-blur border-b border-gray-200 dark:border-gray-800">
+      {/* NAVBAR */}
+      <div className="flex h-16 items-center justify-between px-6">
+        {/* LOGO */}
         <div
           onClick={() => handleNavigation("/")}
           className="flex items-center gap-2 cursor-pointer">
@@ -64,141 +64,101 @@ const Navbar = () => {
 
         {/* DESKTOP MENU */}
         <div className="hidden md:flex items-center gap-6">
-          <button
-            onClick={() => handleNavigation("/jobs")}
-            className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-            Find Jobs
-          </button>
-
-          <button
-            onClick={() => handleScroll("about")}
-            className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-            About
-          </button>
-
-          <button
-            onClick={() => handleScroll("blog")}
-            className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-            Blog
-          </button>
-
-          <button
-            onClick={() => handleScroll("careers")}
-            className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-            Careers
-          </button>
-
-          <button
-            onClick={() => handleScroll("contact")}
-            className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-            Contact
-          </button>
+          {[
+            { label: "Find Jobs", action: () => handleNavigation("/jobs") },
+            { label: "About", action: () => handleScroll("about") },
+            { label: "Blog", action: () => handleScroll("blog") },
+            { label: "Careers", action: () => handleScroll("careers") },
+            { label: "Contact", action: () => handleScroll("contact") },
+          ].map((item, i) => (
+            <button
+              key={i}
+              onClick={item.action}
+              className="text-sm font-medium text-gray-700 dark:text-white hover:text-blue-600 transition">
+              {item.label}
+            </button>
+          ))}
 
           {!user ? (
             <>
               <button
                 onClick={() => handleNavigation("/login")}
-                className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                className="text-sm font-medium text-gray-700 dark:text-white hover:text-blue-600 transition">
                 Login
               </button>
 
               <button
                 onClick={() => handleNavigation("/signup")}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                 Get Started
               </button>
             </>
           ) : (
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 text-red-500 hover:text-red-600">
+              className="flex items-center gap-2 text-red-500">
               <LogOut size={18} />
               Logout
             </button>
           )}
         </div>
 
-        {/* MOBILE MENU BUTTON - UPDATED WITH BLUE COLOR */}
+        {/* MOBILE BUTTON (TOGGLE FIXED) */}
         <button
-          className="md:hidden text-blue-600 hover:text-blue-700 transition-colors duration-200"
+          className="md:hidden text-blue-600 transition"
           onClick={() => setOpen(!open)}>
-          {open ? (
-            <X size={24} className="text-blue-600" />
-          ) : (
-            <Menu size={24} className="text-blue-600" />
-          )}
+          {open ? <X size={26} /> : <Menu size={26} />}
         </button>
       </div>
 
-      {/* MOBILE MENU DROPDOWN */}
-      {open && (
-        <div className="md:hidden px-6 pb-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-          <button
-            onClick={() => handleNavigation("/jobs")}
-            className="block w-full text-left py-2 text-gray-600 dark:text-gray-300">
-            Find Jobs
-          </button>
-
-          <button
-            onClick={() => handleScroll("about")}
-            className="block w-full text-left py-2 text-gray-600 dark:text-gray-300">
-            About
-          </button>
-
-          <button
-            onClick={() => handleScroll("blog")}
-            className="block w-full text-left py-2 text-gray-600 dark:text-gray-300">
-            Blog
-          </button>
-
-          <button
-            onClick={() => handleScroll("careers")}
-            className="block w-full text-left py-2 text-gray-600 dark:text-gray-300">
-            Careers
-          </button>
-
-          <button
-            onClick={() => handleScroll("privacy")}
-            className="block w-full text-left py-2 text-gray-600 dark:text-gray-300">
-            Privacy
-          </button>
-
-          <button
-            onClick={() => handleScroll("terms")}
-            className="block w-full text-left py-2 text-gray-600 dark:text-gray-300">
-            Terms
-          </button>
-
-          <button
-            onClick={() => handleScroll("contact")}
-            className="block w-full text-left py-2 text-gray-600 dark:text-gray-300">
-            Contact
-          </button>
-
-          {!user ? (
-            <>
+      {/* MOBILE MENU */}
+      <div
+        className={`md:hidden overflow-hidden transition-all duration-300 ${
+          open ? "max-h-[420px] opacity-100" : "max-h-0 opacity-0"
+        }`}>
+        <div className="px-3 py-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: "Find Jobs", action: () => handleNavigation("/jobs") },
+              { label: "About", action: () => handleScroll("about") },
+              { label: "Blog", action: () => handleScroll("blog") },
+              { label: "Careers", action: () => handleScroll("careers") },
+              { label: "Privacy", action: () => handleScroll("privacy") },
+              { label: "Terms", action: () => handleScroll("terms") },
+              { label: "Contact", action: () => handleScroll("contact") },
+            ].map((item, i) => (
               <button
-                onClick={() => handleNavigation("/login")}
-                className="block w-full text-left py-2 text-gray-600 dark:text-gray-300">
-                Login
+                key={i}
+                onClick={item.action}
+                className="text-xs font-semibold text-blue-600 bg-blue-50 dark:bg-blue-900/20 py-2 rounded-md text-center hover:bg-blue-600 hover:text-white transition">
+                {item.label}
               </button>
+            ))}
 
+            {!user ? (
+              <>
+                <button
+                  onClick={() => handleNavigation("/login")}
+                  className="text-xs font-semibold text-blue-600 bg-blue-50 dark:bg-blue-900/20 py-2 rounded-md text-center hover:bg-blue-600 hover:text-white transition">
+                  Login
+                </button>
+
+                <button
+                  onClick={() => handleNavigation("/signup")}
+                  className="col-span-3 text-sm font-semibold bg-blue-600 text-white py-2 rounded-md mt-1 hover:bg-blue-700">
+                  Get Started
+                </button>
+              </>
+            ) : (
               <button
-                onClick={() => handleNavigation("/signup")}
-                className="w-full mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                Get Started
+                onClick={handleLogout}
+                className="col-span-3 text-sm font-semibold bg-red-500 text-white py-2 rounded-md mt-1">
+                Logout
               </button>
-            </>
-          ) : (
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-red-500 py-2">
-              <LogOut size={18} />
-              Logout
-            </button>
-          )}
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 };
